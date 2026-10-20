@@ -11,6 +11,7 @@ export const ENV = {
   apiBase: text(env.VITE_API_BASE_URL).replace(/\/+$/, ''),
   mpesaTill: text(env.VITE_MPESA_TILL),
   mpesaPaybill: text(env.VITE_MPESA_PAYBILL),
+  mpesaAccount: text(env.VITE_MPESA_ACCOUNT),
   paypalClientId: text(env.VITE_PAYPAL_CLIENT_ID),
   cardCheckoutUrl: text(env.VITE_CARD_CHECKOUT_URL),
   cardViaApi: flag(env.VITE_CARD_CHECKOUT_VIA_API),

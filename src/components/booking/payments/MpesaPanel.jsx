@@ -116,9 +116,9 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
                 <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-2.5">
                   <span>
                     <span className="block text-sm text-fig-600">Account number</span>
-                    <span className="font-medium tracking-wide">{reference}</span>
+                    <span className="font-medium tracking-wide">{ENV.mpesaAccount || reference}</span>
                   </span>
-                  <CopyButton text={reference} />
+                  <CopyButton text={ENV.mpesaAccount || reference} />
                 </div>
               )}
               <div className="rounded-2xl bg-white px-4 py-2.5">

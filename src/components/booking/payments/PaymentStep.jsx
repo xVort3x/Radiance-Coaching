@@ -1,0 +1,101 @@
+import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { getPaymentModes } from '../../../config/payments';
+import { ENV } from '../../../config/env';
+import { PACKAGE, SITE } from '../../../config/site';
+import { formatKes, formatUsd, kesToUsd } from '../../../lib/format';
+import Button from '../../ui/Button';
+import Notice from '../../ui/Notice';
+import CardPanel from './CardPanel';
+import MethodPicker from './MethodPicker';
+import MpesaPanel from './MpesaPanel';
+import PaypalPanel from './PaypalPanel';
+
+export default function PaymentStep({ offer, quote, reference, details, onPaid, onPayLater }) {
+  const modes = useMemo(() => getPaymentModes(), []);
+  const available = ['mpesa', 'paypal', 'card'].filter((id) => modes[id] !== 'unavailable');
+  const [method, setMethod] = useState(available[0] ?? null);
+
+  const description = `${offer.name}${quote.isPackage ? `, ${PACKAGE.sessions}-session package` : ''} with ${SITE.coach} (${reference})`;
+
+  if (available.length === 0) {
+    return (
+      <div className="space-y-5">
+        <Notice tone="info">
+          Online payment is not switched on for this site yet. You can still request this time. {SITE.coachFirstName}{' '}
+          will confirm it and share payment details by email.
+        </Notice>
+        <Button size="lg" onClick={onPayLater}>
+          Request this time and pay by email
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl bg-mist-200 px-5 py-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <p className="text-fig-800">
+            {offer.name}
+            {quote.isPackage && `, ${PACKAGE.sessions}-session package`}
+          </p>
+          <p className="font-display text-3xl text-fig-900">
+            {formatKes(quote.total)}
+            {method === 'paypal' && (
+              <span className="ml-3 font-sans text-sm text-fig-600">
+                charged as {formatUsd(kesToUsd(quote.total, ENV.kesPerUsd))}
+              </span>
+            )}
+          </p>
+        </div>
+        {quote.isPackage && (
+          <p className="mt-1 text-sm text-fig-700">
+            {quote.count} sessions at {formatKes(quote.each)} each, {formatKes(PACKAGE.discountPerSessionKes)} off every
+            session. You save {formatKes(quote.saving)}.
+          </p>
+        )}
+      </div>
+
+      <MethodPicker value={method} onChange={setMethod} modes={modes} />
+
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={method}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {method === 'mpesa' && (
+            <MpesaPanel
+              mode={modes.mpesa}
+              amountKes={quote.total}
+              reference={reference}
+              defaultPhone={details.phone}
+              onSuccess={onPaid}
+            />
+          )}
+          {method === 'paypal' && (
+            <PaypalPanel
+              mode={modes.paypal}
+              amountKes={quote.total}
+              reference={reference}
+              description={description}
+              onSuccess={onPaid}
+            />
+          )}
+          {method === 'card' && (
+            <CardPanel
+              mode={modes.card}
+              amountKes={quote.total}
+              reference={reference}
+              details={details}
+              onSuccess={onPaid}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}

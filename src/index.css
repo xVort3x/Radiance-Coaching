@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+/*
+  Radiance palette
+  mist  – the page: a cool, sage-tinted white
+  fig   – deep dusk plum for text and the dark sections
+  moss  – grounded green for actions and the landscape
+  sun   – the radiance: morning gold, used for light, never for body text
+  petal – a soft blush for warmth
+*/
+@theme {
+  --color-mist-50: #f8faf7;
+  --color-mist-100: #f2f5f1;
+  --color-mist-200: #e6ece4;
+  --color-mist-300: #d3ddd0;
+
+  --color-fig-950: #1d1726;
+  --color-fig-900: #2a2233;
+  --color-fig-800: #3a3045;
+  --color-fig-700: #4b4059;
+  --color-fig-600: #5e5470;
+  --color-fig-500: #766c87;
+  --color-fig-300: #b7afc3;
+  --color-fig-200: #d6d1de;
+
+  --color-moss-900: #22372f;
+  --color-moss-800: #2a4238;
+  --color-moss-700: #2f4a3f;
+  --color-moss-600: #3b5c4e;
+  --color-moss-500: #4b7260;
+  --color-moss-400: #6e917d;
+  --color-moss-300: #8fae9a;
+  --color-moss-200: #bdd0c3;
+  --color-moss-100: #dce7df;
+
+  --color-sun-100: #fbefd0;
+  --color-sun-200: #f6dda6;
+  --color-sun-300: #f1cb7e;
+  --color-sun-400: #ebbe5e;
+  --color-sun-500: #e9b44c;
+  --color-sun-600: #c98f1f;
+  --color-sun-700: #9b6a12;
+
+  --color-petal-100: #f8eae5;
+  --color-petal-200: #f2ddd6;
+  --color-petal-300: #ebcfc6;
+  --color-petal-500: #c9988a;
+  --color-petal-700: #8d5b4e;
+
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--color-mist-100);
+    color: var(--color-fig-900);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-moss-700);
+    outline-offset: 3px;
+  }
+
+  .on-dark :focus-visible {
+    outline-color: var(--color-sun-300);
+  }
+
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  ::selection {
+    background: var(--color-sun-200);
+    color: var(--color-fig-900);
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* Used by form fields across the site and the booking window. */
+  .field {
+    display: block;
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid var(--color-moss-300);
+    background-color: #fff;
+    padding: 0.8rem 1rem;
+    color: var(--color-fig-900);
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+  }
+
+  .field::placeholder {
+    color: var(--color-fig-500);
+  }
+
+  .field:hover {
+    border-color: var(--color-moss-500);
+  }
+
+  .field:focus-visible {
+    outline: none;
+    border-color: var(--color-moss-700);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-moss-500) 30%, transparent);
+  }
+
+  .field[aria-invalid='true'] {
+    border-color: #b4452f;
+  }
+}

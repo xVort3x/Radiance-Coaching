@@ -1,0 +1,34 @@
+import { cx } from '../../lib/cx';
+
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-colors duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50';
+
+const variants = {
+  primary: 'bg-moss-700 text-white hover:bg-moss-800 active:bg-moss-900',
+  secondary: 'border border-moss-700/40 text-moss-800 hover:border-moss-700 hover:bg-moss-100',
+  sun: 'bg-sun-400 text-fig-900 hover:bg-sun-300 active:bg-sun-500',
+  outlineLight: 'border border-white/35 text-white hover:bg-white/10',
+  quiet: 'text-moss-800 hover:bg-moss-100',
+};
+
+const sizes = {
+  sm: 'h-10 px-4 text-sm',
+  md: 'h-12 px-6 text-[0.95rem]',
+  lg: 'h-14 px-8 text-base',
+};
+
+export default function Button({
+  as: Tag = 'button',
+  variant = 'primary',
+  size = 'md',
+  className,
+  children,
+  ...props
+}) {
+  const extra = Tag === 'button' && !props.type ? { type: 'button' } : {};
+  return (
+    <Tag className={cx(base, variants[variant], sizes[size], className)} {...extra} {...props}>
+      {children}
+    </Tag>
+  );
+}

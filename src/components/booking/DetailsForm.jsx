@@ -76,6 +76,18 @@ export default function DetailsForm({ values, errors, onChange, discovery }) {
           onChange={set('notes')}
         />
       </Field>
+
+      <p className="text-sm text-fig-600">
+        By continuing you agree to our{' '}
+        <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline">
+          terms of service
+        </a>{' '}
+        and{' '}
+        <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+          privacy policy
+        </a>
+        . They open in a new tab.
+      </p>
     </form>
   );
 }

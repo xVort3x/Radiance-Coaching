@@ -2,6 +2,7 @@ import { PACKAGE, SITE, TIME, SESSION_FORMAT } from '../config/site';
 import { ENV } from '../config/env';
 import { formatKes } from '../lib/format';
 import { formatDateEat, formatTimeEat, formatLocal, localDiffers } from '../lib/dates';
+import { postToApi } from './availability';
 
 export function makeReference() {
   const time = Date.now().toString(36).toUpperCase().slice(-5);
@@ -91,8 +92,39 @@ export function bookingSubject(booking) {
   return `${booking.offer.name}${pack} request from ${booking.details.name} (${booking.ref})`;
 }
 
-export function submitBooking(booking) {
-  return deliver({
+// Result: { emailed, taken, rescheduling }.
+//  emailed      the client has been sent a confirmation email
+//  taken        the time was taken by someone else (free bookings only)
+//  rescheduling the client had already paid, so Anne will arrange another time
+export async function submitBooking(booking) {
+  if (ENV.bookingApi) {
+    const { ref, offer, quote, instant, details, payment } = booking;
+    const data = await postToApi({
+      action: 'book',
+      ref,
+      start: instant.getTime(),
+      minutes: offer.minutes,
+      offerId: offer.id,
+      offerName: offer.name,
+      discovery: offer.priceKes === 0,
+      isPackage: quote.isPackage,
+      sessions: quote.count,
+      each: quote.each,
+      total: quote.total,
+      name: details.name,
+      email: details.email,
+      phone: details.phone,
+      notes: details.notes,
+      payment: { status: payment.status, method: payment.method, receipt: payment.receipt },
+      paymentText: describePayment(payment),
+      localTime: localDiffers(instant) ? formatLocal(instant) : '',
+    });
+    if (data.ok) return { emailed: Boolean(data.emailed), taken: false, rescheduling: Boolean(data.rescheduling) };
+    if (data.code === 'taken') return { emailed: false, taken: true, rescheduling: false };
+    throw new Error(data.message || 'The booking could not be saved.');
+  }
+
+  await deliver({
     subject: bookingSubject(booking),
     replyTo: booking.details.email,
     fields: {
@@ -105,11 +137,17 @@ export function submitBooking(booking) {
     },
     text: buildBookingText(booking),
   });
+  return { emailed: false, taken: false, rescheduling: false };
 }
 
-export function submitContact({ name, email, message }) {
+export async function submitContact({ name, email, message, website = '' }) {
+  if (ENV.bookingApi) {
+    const data = await postToApi({ action: 'contact', name, email, message, website });
+    if (!data.ok) throw new Error(data.message || 'The message could not be sent.');
+    return;
+  }
   const text = `From: ${name} <${email}>\n\n${message}`;
-  return deliver({
+  await deliver({
     subject: `Message from ${name} via the Radiance Coaching website`,
     replyTo: email,
     fields: { name },

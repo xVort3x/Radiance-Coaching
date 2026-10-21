@@ -51,8 +51,11 @@ const toMinutes = (hhmm) => {
 };
 const toHHMM = (total) => `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 
+// `busy` is a list of { start, end } in milliseconds (times already taken).
+const clashes = (busy, startMs, endMs) => busy.some((b) => startMs < b.end && b.start < endMs);
+
 // Free start times on a day for a session of `minutes` length.
-export function slotsFor(key, now = new Date(), minutes = 30) {
+export function slotsFor(key, now = new Date(), minutes = 30, busy = []) {
   if (AVAILABILITY.blockedDates.includes(key)) return [];
   const { y, m, d } = parseKey(key);
   const hours = AVAILABILITY.hours[weekdayOf(y, m, d)];
@@ -64,7 +67,8 @@ export function slotsFor(key, now = new Date(), minutes = 30) {
   for (let start = open; start + minutes <= close; start += minutes) {
     const time = toHHMM(start);
     const instant = slotInstant(key, time);
-    if (instant.getTime() >= earliest) slots.push({ time, instant });
+    const startMs = instant.getTime();
+    if (startMs >= earliest && !clashes(busy, startMs, startMs + minutes * 60_000)) slots.push({ time, instant });
   }
   return slots;
 }
@@ -75,17 +79,17 @@ export function bookingWindow(now = new Date()) {
   return { first, last: addDays(first, AVAILABILITY.maxAdvanceDays) };
 }
 
-export function isBookable(key, now = new Date(), minutes = 30) {
+export function isBookable(key, now = new Date(), minutes = 30, busy = []) {
   const { first, last } = bookingWindow(now);
   if (key < first || key > last) return false;
-  return slotsFor(key, now, minutes).length > 0;
+  return slotsFor(key, now, minutes, busy).length > 0;
 }
 
-export function firstBookableKey(now = new Date(), minutes = 30) {
+export function firstBookableKey(now = new Date(), minutes = 30, busy = []) {
   const { first } = bookingWindow(now);
   for (let i = 0; i <= AVAILABILITY.maxAdvanceDays; i += 1) {
     const key = addDays(first, i);
-    if (isBookable(key, now, minutes)) return key;
+    if (isBookable(key, now, minutes, busy)) return key;
   }
   return null;
 }

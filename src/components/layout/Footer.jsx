@@ -1,4 +1,5 @@
 import { Mail } from 'lucide-react';
+import { WhatsAppLink } from '../ui/WhatsAppButton';
 import { NAV, SITE } from '../../config/site';
 import Logo from '../art/Logo';
 import Container from '../ui/Container';
@@ -39,6 +40,9 @@ export default function Footer() {
             <Mail size={18} aria-hidden="true" />
             {SITE.email}
           </a>
+          <WhatsAppLink className="mt-3 flex items-center gap-2.5 text-[0.95rem] text-fig-200 hover:text-sun-300">
+            WhatsApp
+          </WhatsAppLink>
           <p className="mt-4 text-[0.95rem] text-fig-300">
             Sessions and times are in East Africa Time.
           </p>
@@ -49,6 +53,14 @@ export default function Footer() {
         <Container className="flex flex-col gap-3 py-6 pb-24 text-sm text-fig-300 md:flex-row md:items-center md:justify-between md:pb-6">
           <p>
             &copy; {new Date().getFullYear()} {SITE.name}. All rights reserved.
+          </p>
+          <p className="flex gap-5">
+            <a href="#/privacy" className="hover:text-sun-300">
+              Privacy policy
+            </a>
+            <a href="#/terms" className="hover:text-sun-300">
+              Terms of service
+            </a>
           </p>
         </Container>
       </div>

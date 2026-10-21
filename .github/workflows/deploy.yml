@@ -32,6 +32,8 @@ jobs:
           # Optional settings live in the repository's Settings > Secrets and
           # variables > Actions > Variables. They are public once built.
           VITE_FORM_ENDPOINT: ${{ vars.VITE_FORM_ENDPOINT }}
+          VITE_BOOKING_API_URL: ${{ vars.VITE_BOOKING_API_URL }}
+          VITE_WHATSAPP_NUMBER: ${{ vars.VITE_WHATSAPP_NUMBER }}
           VITE_DEMO_PAYMENTS: ${{ vars.VITE_DEMO_PAYMENTS }}
           VITE_KES_PER_USD: ${{ vars.VITE_KES_PER_USD }}
           VITE_MPESA_TILL: ${{ vars.VITE_MPESA_TILL }}

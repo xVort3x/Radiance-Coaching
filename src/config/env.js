@@ -6,8 +6,20 @@ const text = (value) => String(value ?? '').trim();
 
 const rate = Number(env.VITE_KES_PER_USD);
 
+// WhatsApp number to international digits only, e.g. 0712 345 678 -> 254712345678.
+function whatsappDigits(value) {
+  const digits = text(value).replace(/\D/g, '');
+  if (!digits) return '';
+  if (/^0[17]\d{8}$/.test(digits)) return `254${digits.slice(1)}`;
+  if (/^[17]\d{8}$/.test(digits)) return `254${digits}`;
+  return digits;
+}
+
 export const ENV = {
   formEndpoint: text(env.VITE_FORM_ENDPOINT),
+  // Booking helper (Google Apps Script web app). See backend/Code.gs and the README.
+  bookingApi: text(env.VITE_BOOKING_API_URL),
+  whatsapp: whatsappDigits(env.VITE_WHATSAPP_NUMBER),
   apiBase: text(env.VITE_API_BASE_URL).replace(/\/+$/, ''),
   mpesaTill: text(env.VITE_MPESA_TILL),
   mpesaPaybill: text(env.VITE_MPESA_PAYBILL),

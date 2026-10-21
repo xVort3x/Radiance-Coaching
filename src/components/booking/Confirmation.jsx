@@ -40,11 +40,13 @@ function AnimatedCheck() {
 
 const headline = (booking, delivery) => {
   if (booking.demo) return 'Preview complete';
+  if (delivery === 'taken') return 'That time was just taken';
+  if (delivery === 'rescheduling') return 'Payment received';
   if (delivery === 'failed') return 'One more step';
   return booking.offer.priceKes > 0 ? 'Booking received' : 'Request sent';
 };
 
-export default function Confirmation({ booking, delivery, onRetry, onClose }) {
+export default function Confirmation({ booking, delivery, emailed, onPickAnother, onRetry, onClose }) {
   const { ref, offer, quote, instant, details, payment } = booking;
 
   const addToCalendar = () => {
@@ -55,7 +57,7 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
         title: `${offer.name}${quote.isPackage ? ` (session 1 of ${quote.count})` : ''} with ${SITE.coach}`,
         start: instant,
         minutes: offer.minutes,
-        description: `Booking reference ${ref}. ${SITE.coachFirstName} will email your video link and confirm the time.`,
+        description: `Booking reference ${ref}. Your video link is in your confirmation email, or ${SITE.coachFirstName} will send it before the session.`,
         location: calendarLocation,
       }),
     );
@@ -67,13 +69,19 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <AnimatedCheck />
+        {delivery !== 'taken' && <AnimatedCheck />}
         <div>
           <h3 className="font-display text-3xl text-fig-900">{headline(booking, delivery)}</h3>
           <p className="text-fig-700">
             {booking.demo
               ? 'This was a preview, so nothing was paid or sent.'
-              : `Thank you, ${details.name.trim().split(/\s+/)[0]}. ${SITE.coachFirstName} will confirm your time by email.`}
+              : delivery === 'taken'
+                ? 'Someone booked it a moment before you. Nothing has been charged.'
+                : delivery === 'rescheduling'
+                  ? `Thank you, ${details.name.trim().split(/\s+/)[0]}. Someone else took your chosen time while you were paying.`
+                  : emailed
+                    ? `Thank you, ${details.name.trim().split(/\s+/)[0]}. A confirmation is on its way to ${details.email}.`
+                    : `Thank you, ${details.name.trim().split(/\s+/)[0]}. ${SITE.coachFirstName} will confirm your time by email.`}
           </p>
         </div>
       </div>
@@ -92,6 +100,24 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
         </p>
       )}
 
+      {delivery === 'taken' && (
+        <Notice tone="error">
+          Please choose another time. Your details are saved in this window.
+          <div className="mt-3">
+            <Button size="sm" variant="secondary" onClick={onPickAnother}>
+              Choose another time
+            </Button>
+          </div>
+        </Notice>
+      )}
+
+      {delivery === 'rescheduling' && (
+        <Notice tone="error">
+          Your payment has been recorded, and {SITE.coachFirstName} has been told. She will contact you at{' '}
+          {details.email} to choose another time that suits you. Reference {ref}.
+        </Notice>
+      )}
+
       {delivery === 'failed' && (
         <Notice tone="error">
           Your booking could not be sent to {SITE.coachFirstName}
@@ -108,7 +134,7 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
         </Notice>
       )}
 
-      {quote.isPackage && (
+      {delivery !== 'taken' && delivery !== 'rescheduling' && quote.isPackage && (
         <Notice>
           {SITE.coachFirstName} will email you to arrange your other {quote.count - 1} sessions. Your first session is
           the time shown below.
@@ -125,6 +151,7 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
         <Notice>Anne will email you payment details with your confirmation.</Notice>
       )}
 
+      {delivery !== 'taken' && (
       <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-white">
         {[
           ['Reference', ref],
@@ -143,11 +170,14 @@ export default function Confirmation({ booking, delivery, onRetry, onClose }) {
             </div>
           ))}
       </dl>
+      )}
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" onClick={addToCalendar}>
-          <CalendarPlus size={18} aria-hidden="true" /> Add to my calendar
-        </Button>
+        {delivery !== 'taken' && delivery !== 'rescheduling' && (
+          <Button variant="secondary" onClick={addToCalendar}>
+            <CalendarPlus size={18} aria-hidden="true" /> Add to my calendar
+          </Button>
+        )}
         {delivery === 'failed' && (
           <>
             <Button as="a" variant="secondary" href={mailHref}>

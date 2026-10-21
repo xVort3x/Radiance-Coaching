@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, LoaderCircle, X } from 'lucide-react';
 import { OFFERS } from '../../config/site';
 import { isDemoMode } from '../../config/env';
 import { useBooking } from '../../booking/BookingContext';
@@ -9,8 +9,10 @@ import { isEmail, normalizeKenyanPhone } from '../../lib/validation';
 import { isBookable, slotInstant, slotsFor } from '../../lib/dates';
 import { useDialog } from '../../lib/useDialog';
 import { quoteFor } from '../../lib/pricing';
+import { fetchBusy, holdSlot, sharedCalendar } from '../../services/availability';
 import { makeReference, submitBooking } from '../../services/booking';
 import Button from '../ui/Button';
+import Notice from '../ui/Notice';
 import Calendar from './Calendar';
 import Confirmation from './Confirmation';
 import DetailsForm from './DetailsForm';
@@ -41,6 +43,23 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
   const [errors, setErrors] = useState({});
   const [booking, setBooking] = useState(null);
   const [delivery, setDelivery] = useState('sending');
+  const [emailed, setEmailed] = useState(false);
+  const [busy, setBusy] = useState([]);
+  const [notice, setNotice] = useState(null);
+  const [holding, setHolding] = useState(false);
+
+  // Times other people have already booked. Without the booking helper this stays empty.
+  const refreshBusy = useCallback(async () => {
+    if (!sharedCalendar()) return;
+    try {
+      setBusy(await fetchBusy());
+    } catch {
+      /* the calendar still works, it just cannot see other bookings */
+    }
+  }, []);
+  useEffect(() => {
+    refreshBusy();
+  }, [refreshBusy]);
 
   const offer = OFFERS[offerId];
   const paid = offer.priceKes > 0;
@@ -65,7 +84,7 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
   const pickDate = (key) => {
     setDateKey(key);
     // Keep the time only if the new day offers it.
-    setTime((current) => (current && slotsFor(key, now, offer.minutes).some((s) => s.time === current) ? current : null));
+    setTime((current) => (current && slotsFor(key, now, offer.minutes, busy).some((s) => s.time === current) ? current : null));
   };
 
   // Different services can be different lengths, so a chosen day or time may
@@ -74,7 +93,7 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
     setErrors({});
     if (OFFERS[id].minutes !== offer.minutes) {
       setTime(null);
-      setDateKey((current) => (current && isBookable(current, now, OFFERS[id].minutes) ? current : null));
+      setDateKey((current) => (current && isBookable(current, now, OFFERS[id].minutes, busy) ? current : null));
     }
     setOfferId(id);
     if (OFFERS[id].priceKes === 0) setBundle(false);
@@ -105,12 +124,18 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
     }
     setDelivery('sending');
     try {
-      await submitBooking(record);
-      setDelivery('sent');
+      const result = await submitBooking(record);
+      setEmailed(result.emailed);
+      if (result.taken) {
+        setDelivery('taken');
+        refreshBusy();
+      } else {
+        setDelivery(result.rescheduling ? 'rescheduling' : 'sent');
+      }
     } catch {
       setDelivery('failed');
     }
-  }, []);
+  }, [refreshBusy]);
 
   const finish = useCallback(
     (payment) => {
@@ -122,15 +147,46 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
     [reference, offer, quote, instant, details, go, deliver],
   );
 
-  const onContinue = () => {
+  // The chosen time is taken by someone else: go back and pick another.
+  const pickAnother = useCallback(() => {
+    setTime(null);
+    setBooking(null);
+    setNotice('That time has just been taken by someone else. Please choose another time.');
+    refreshBusy();
+    go('when', -1);
+  }, [go, refreshBusy]);
+
+  const onContinue = async () => {
     if (stepId === 'when') {
-      if (instant) go('details', 1);
+      if (instant) {
+        setNotice(null);
+        go('details', 1);
+      }
       return;
     }
     if (stepId === 'details') {
       if (!validateDetails()) return;
-      if (paid) go('pay', 1);
-      else finish({ method: 'none', status: 'free' });
+      if (!paid) {
+        finish({ method: 'none', status: 'free' });
+        return;
+      }
+      // Keep the time reserved for a few minutes while the visitor pays.
+      if (sharedCalendar() && !isDemoMode()) {
+        setHolding(true);
+        const outcome = await holdSlot({
+          ref: reference,
+          instant,
+          minutes: offer.minutes,
+          offerName: offer.name,
+          email: details.email,
+        });
+        setHolding(false);
+        if (outcome === 'taken') {
+          pickAnother();
+          return;
+        }
+      }
+      go('pay', 1);
     }
   };
 
@@ -204,8 +260,20 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
               >
                 {stepId === 'when' && (
                   <div className="grid gap-8 lg:grid-cols-[1fr_14.5rem]">
-                    <Calendar value={dateKey} onChange={pickDate} now={now} minutes={offer.minutes} />
-                    <TimeSlots dateKey={dateKey} value={time} onChange={setTime} now={now} minutes={offer.minutes} />
+                    {notice && (
+                      <Notice tone="error" className="lg:col-span-2">
+                        {notice}
+                      </Notice>
+                    )}
+                    <Calendar value={dateKey} onChange={pickDate} now={now} minutes={offer.minutes} busy={busy} />
+                    <TimeSlots
+                      dateKey={dateKey}
+                      value={time}
+                      onChange={setTime}
+                      now={now}
+                      minutes={offer.minutes}
+                      busy={busy}
+                    />
                   </div>
                 )}
 
@@ -234,6 +302,8 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
                   <Confirmation
                     booking={booking}
                     delivery={delivery}
+                    emailed={emailed}
+                    onPickAnother={pickAnother}
                     onRetry={() => deliver(booking)}
                     onClose={onClose}
                   />
@@ -255,8 +325,15 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
               )}
 
               {stepId !== 'pay' && (
-                <Button size="lg" onClick={onContinue} disabled={stepId === 'when' && !instant}>
-                  {stepId === 'details' && !paid ? 'Confirm booking' : stepId === 'details' ? 'Continue to payment' : 'Continue'}
+                <Button size="lg" onClick={onContinue} disabled={(stepId === 'when' && !instant) || holding}>
+                  {holding && <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />}
+                  {holding
+                    ? 'Holding your time'
+                    : stepId === 'details' && !paid
+                      ? 'Confirm booking'
+                      : stepId === 'details'
+                        ? 'Continue to payment'
+                        : 'Continue'}
                 </Button>
               )}
               {stepId === 'pay' && isDemoMode() && (

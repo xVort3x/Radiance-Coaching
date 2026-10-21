@@ -18,8 +18,10 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } },
 };
 
-export default function TimeSlots({ dateKey, value, onChange, now, minutes }) {
-  const slots = useMemo(() => (dateKey ? slotsFor(dateKey, now, minutes) : []), [dateKey, now, minutes]);
+const NO_BUSY = [];
+
+export default function TimeSlots({ dateKey, value, onChange, now, minutes, busy = NO_BUSY }) {
+  const slots = useMemo(() => (dateKey ? slotsFor(dateKey, now, minutes, busy) : []), [dateKey, now, minutes, busy]);
 
   if (!dateKey) {
     return (
@@ -36,6 +38,12 @@ export default function TimeSlots({ dateKey, value, onChange, now, minutes }) {
         {formatDateEat(slotInstant(dateKey, '12:00'))}
       </h3>
       <p className="mt-1 text-sm text-fig-600">Times are in {TIME.label}.</p>
+
+      {slots.length === 0 && (
+        <p className="mt-5 rounded-2xl border border-moss-200 bg-white px-4 py-3 text-fig-700" role="status">
+          All times on this day have just been taken. Please choose another day.
+        </p>
+      )}
 
       <motion.ul
         key={dateKey}

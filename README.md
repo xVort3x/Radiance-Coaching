@@ -60,6 +60,41 @@ Bookings and contact messages are sent from the page itself, with no email app i
 
 To use another service (for example Formspree), set `VITE_FORM_ENDPOINT` to its URL. It must accept a JSON POST.
 
+### Bookings and confirmation emails (the booking helper)
+
+The helper is a small free program in `backend/Code.gs` that runs in Anne's Google account. Once it is set up:
+
+- The calendar hides times that are already booked, so nobody can double-book.
+- A time is held for 15 minutes while a client pays.
+- Each client gets a confirmation email with the date, time, video link, what to expect and a calendar invite. Anne gets a notification email too.
+- Every booking is saved in a Google Sheet ("Radiance Coaching bookings") in Anne's Drive.
+- The contact form also sends through it, so FormSubmit is no longer needed.
+
+**Setup (about 15 minutes), signed in as info.radiancecoaching@gmail.com:**
+
+1. Go to **script.google.com** and click **New project**. Name it "Radiance bookings".
+2. Delete the sample code, then open `backend/Code.gs` from this project in any text editor, copy everything and paste it in. Click the save icon.
+3. Near the top, replace `PASTE YOUR GOOGLE MEET OR ZOOM LINK HERE` with Anne's meeting link (keep the quotes). If Anne has a WhatsApp number, also fill in `WHATSAPP` (digits only, for example `254712345678`).
+4. In the left menu choose **Project settings** (the gear) and tick **Show "appsscript.json" manifest file in editor**. Open `appsscript.json` and make sure `"timeZone"` is `"Africa/Nairobi"`.
+5. Back in the editor, pick **setup** in the function list at the top and click **Run**. Google asks for permission: choose the account, click **Advanced**, then **Go to Radiance bookings (unsafe)**, then **Allow**. This is normal for your own scripts. Anne should receive a test email with a link to the bookings sheet.
+6. Click **Deploy, New deployment**, choose the type **Web app**. Set **Execute as: Me** and **Who has access: Anyone**. Click **Deploy** and copy the **Web app URL** (it ends in `/exec`).
+7. In the GitHub repository, add a variable `VITE_BOOKING_API_URL` with that URL, then re-run the deploy (**Actions, Deploy to GitHub Pages, Run workflow**).
+
+**Changing the script later:** after editing the code, click **Deploy, Manage deployments**, the pencil icon, **Version: New version**, **Deploy**. The address stays the same.
+
+**Running the sheet:**
+
+- *Cancel a booking:* change its **Status** to `cancelled` and that time becomes free again.
+- *Block days off or holidays:* open the **Blocked** tab and add a row with a start and an end date and time.
+- Statuses: `confirmed`, `hold` (waiting for payment, expires after 15 minutes), `needs-new-time` (a client paid but someone else booked that time first, so Anne should contact them), `released` and `expired` (ignore these).
+- Hours and the meeting link live at the top of `Code.gs`. If you change Anne's hours, change `src/config/site.js` too so the website and the helper agree.
+
+**Limits:** Gmail lets a free account send about 100 emails a day, which is plenty for a coaching practice. Anne's M-Pesa and PayPal payments are still checked by hand.
+
+### WhatsApp
+
+Set `VITE_WHATSAPP_NUMBER` to Anne's number (for example `0712 345 678`). A WhatsApp button then appears on the site, in the contact section and in the footer. Leave it blank to hide them.
+
 ### M-Pesa
 
 Pick one:
@@ -90,14 +125,16 @@ Add `?demo=payments` to the page address (or set `VITE_DEMO_PAYMENTS=true`) to c
 
 ## Things to know
 
-- **Availability is not shared.** The calendar shows Anne's weekly hours from `src/config/site.js`, but it cannot see bookings already made, so two people could request the same slot. Anne confirms each time by email. Real-time availability needs a small backend (the `{API}` above is a good place for it).
+- **Shared availability needs the booking helper.** Without `VITE_BOOKING_API_URL` the calendar shows Anne's weekly hours but cannot see bookings already made, so two people could request the same slot. With the helper set up (see above), taken times are hidden and held while someone pays.
 - **Payments confirm differently by method.** M-Pesa with a backend is confirmed automatically. M-Pesa manual, card and PayPal are confirmed by Anne.
 - **Fonts** (Newsreader and Figtree) load from Google Fonts. To host them yourself, install `@fontsource-variable/newsreader` and `@fontsource-variable/figtree` and import them in `src/main.jsx`.
+- **Privacy policy and terms** are in `src/config/legal.js` and open at `#/privacy` and `#/terms`. They are plain-language drafts, not legal advice. Anne should read them, adjust anything that does not match how she works (for example the 24 hours' notice for changing a session), and consider checking with a lawyer. As a collector of personal data she may also need to register with Kenya's Office of the Data Protection Commissioner (odpc.go.ke).
 - Prices are never shown in the page content. The session price (`SESSION_PRICE_KES` in `src/config/site.js`) appears only at checkout, after a service and time are chosen.
 
 ## Project structure
 
 ```
+backend/        booking helper (Google Apps Script), see the README section above
 src/
   config/       site details, content, payment modes, environment
   lib/          dates (East Africa Time), validation, calendar file, dialog behaviour
@@ -107,6 +144,7 @@ src/
     sections/   page sections
     booking/    calendar, time slots, details, confirmation, payments/
     layout/     header, footer
+    legal/      privacy policy and terms page
     ui/         button, container, notice
     art/        logo and illustrations
 ```

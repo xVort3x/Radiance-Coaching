@@ -22,14 +22,16 @@ import { cx } from '../../lib/cx';
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const EASE = [0.22, 1, 0.36, 1];
 
-export default function Calendar({ value, onChange, now, minutes }) {
+const NO_BUSY = [];
+
+export default function Calendar({ value, onChange, now, minutes, busy = NO_BUSY }) {
   const reduce = useReducedMotion();
   const today = useMemo(() => todayParts(now), [now]);
   const range = useMemo(() => bookingWindow(now), [now]);
   const lastParts = useMemo(() => parseKey(range.last), [range]);
 
   const [view, setView] = useState(() => {
-    const start = parseKey(value || firstBookableKey(now, minutes) || range.first);
+    const start = parseKey(value || firstBookableKey(now, minutes, busy) || range.first);
     return { y: start.y, m: start.m };
   });
   const [direction, setDirection] = useState(1);
@@ -60,7 +62,7 @@ export default function Calendar({ value, onChange, now, minutes }) {
     if (value && inView(value)) return value;
     for (let d = 1; d <= total; d += 1) {
       const key = toKey(view.y, view.m, d);
-      if (isBookable(key, now, minutes)) return key;
+      if (isBookable(key, now, minutes, busy)) return key;
     }
     return toKey(view.y, view.m, 1);
   })();
@@ -167,7 +169,7 @@ export default function Calendar({ value, onChange, now, minutes }) {
         {cells.map((day, index) => {
           if (day === null) return <span key={`blank-${index}`} aria-hidden="true" />;
           const key = toKey(view.y, view.m, day);
-          const available = isBookable(key, now, minutes);
+          const available = isBookable(key, now, minutes, busy);
           const selected = key === value;
           const isToday = key === range.first;
           const label = formatDateEat(slotInstant(key, '12:00'));

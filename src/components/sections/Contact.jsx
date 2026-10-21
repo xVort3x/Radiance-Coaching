@@ -5,8 +5,9 @@ import { isEmail } from '../../lib/validation';
 import { submitContact } from '../../services/booking';
 import Button from '../ui/Button';
 import Container from '../ui/Container';
+import { WhatsAppLink } from '../ui/WhatsAppButton';
 
-const EMPTY = { name: '', email: '', message: '' };
+const EMPTY = { name: '', email: '', message: '', website: '' };
 
 export default function Contact() {
   const [values, setValues] = useState(EMPTY);
@@ -57,12 +58,13 @@ export default function Contact() {
             <Mail size={22} aria-hidden="true" />
             {SITE.email}
           </a>
+          <WhatsAppLink className="mt-4 flex items-center gap-3 text-lg text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700" />
         </div>
 
         <form
           onSubmit={onSubmit}
           noValidate
-          className="rounded-[2rem] border border-moss-200 bg-mist-50 p-6 sm:p-10"
+          className="relative rounded-[2rem] border border-moss-200 bg-mist-50 p-6 sm:p-10"
           aria-label="Send a message"
         >
           <div className="grid gap-6 sm:grid-cols-2">
@@ -105,6 +107,18 @@ export default function Contact() {
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Hidden from people. Automated spam fills it in, and the booking helper then ignores the message. */}
+          <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+            <label htmlFor="contact-website">Leave this empty</label>
+            <input
+              id="contact-website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={values.website}
+              onChange={update('website')}
+            />
           </div>
 
           <div className="mt-6">

@@ -26,8 +26,11 @@ export const ENV = {
   mpesaAccount: text(env.VITE_MPESA_ACCOUNT),
   paypalClientId: text(env.VITE_PAYPAL_CLIENT_ID),
   cardCheckoutUrl: text(env.VITE_CARD_CHECKOUT_URL),
+  cardCheckoutUrlPackage: text(env.VITE_CARD_CHECKOUT_URL_PACKAGE),
   cardViaApi: flag(env.VITE_CARD_CHECKOUT_VIA_API),
   kesPerUsd: Number.isFinite(rate) && rate > 0 ? rate : 129,
+  // Card and M-Pesa through Paystack (needs the booking helper). See the README.
+  paystack: flag(env.VITE_PAYSTACK),
   demoFlag: flag(env.VITE_DEMO_PAYMENTS),
   isDev: Boolean(env.DEV),
 };

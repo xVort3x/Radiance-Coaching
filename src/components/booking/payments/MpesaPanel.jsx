@@ -11,7 +11,7 @@ import Notice from '../../ui/Notice';
 
 const demoReceipt = () => `DEMO${Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)}`;
 
-function PhonePulse() {
+export function PhonePulse() {
   return (
     <div className="relative mx-auto flex h-28 w-28 items-center justify-center" aria-hidden="true">
       {[0, 1, 2].map((i) => (

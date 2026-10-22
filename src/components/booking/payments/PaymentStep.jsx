@@ -10,9 +10,10 @@ import CardPanel from './CardPanel';
 import MethodPicker from './MethodPicker';
 import MpesaPanel from './MpesaPanel';
 import PaypalPanel from './PaypalPanel';
+import PaystackPanel from './PaystackPanel';
 
-export default function PaymentStep({ offer, quote, reference, details, onPaid, onPayLater }) {
-  const modes = useMemo(() => getPaymentModes(), []);
+export default function PaymentStep({ offer, quote, instant, reference, details, onPaid, onPayLater, onTaken }) {
+  const modes = useMemo(() => getPaymentModes({ isPackage: quote.isPackage }), [quote.isPackage]);
   const available = ['mpesa', 'paypal', 'card'].filter((id) => modes[id] !== 'unavailable');
   const [method, setMethod] = useState(available[0] ?? null);
 
@@ -67,7 +68,18 @@ export default function PaymentStep({ offer, quote, reference, details, onPaid, 
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         >
-          {method === 'mpesa' && (
+          {(method === 'mpesa' || method === 'card') && modes[method] === 'paystack' && (
+            <PaystackPanel
+              method={method}
+              offer={offer}
+              quote={quote}
+              instant={instant}
+              reference={reference}
+              details={details}
+              onTaken={onTaken}
+            />
+          )}
+          {method === 'mpesa' && modes.mpesa !== 'paystack' && (
             <MpesaPanel
               mode={modes.mpesa}
               amountKes={quote.total}
@@ -85,10 +97,11 @@ export default function PaymentStep({ offer, quote, reference, details, onPaid, 
               onSuccess={onPaid}
             />
           )}
-          {method === 'card' && (
+          {method === 'card' && modes.card !== 'paystack' && (
             <CardPanel
               mode={modes.card}
               amountKes={quote.total}
+              isPackage={quote.isPackage}
               reference={reference}
               details={details}
               onSuccess={onPaid}

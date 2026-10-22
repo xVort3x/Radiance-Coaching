@@ -8,6 +8,7 @@ const ICONS = { mpesa: Smartphone, paypal: Wallet, card: CreditCard };
 const BADGES = {
   demo: 'Preview',
   manual: 'Manual',
+  paystack: 'Secure checkout',
   unavailable: 'Not set up',
 };
 

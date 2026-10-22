@@ -6,22 +6,29 @@ import { ENV, isDemoMode } from './env';
  *  live         Fully automatic (needs the keys or backend described in the README)
  *  manual       M-Pesa Till/Paybill instructions, verified by Anne
  *  hosted       Card entry happens on the payment provider's own page
+ *  paystack     Paid on Paystack's secure page (card or M-Pesa prompt), checked automatically
  *  demo         Simulated, for previews only. Never moves money.
  *  unavailable  Not set up yet, so it cannot be chosen
  */
-export function getPaymentModes() {
+export function getPaymentModes({ isPackage = false } = {}) {
   const demo = isDemoMode();
+  // A payment link has one fixed amount, so the 5-session package needs its own link.
+  const cardUrl = isPackage ? ENV.cardCheckoutUrlPackage : ENV.cardCheckoutUrl;
+  const paystack = ENV.paystack && ENV.bookingApi;
   return {
-    mpesa: ENV.apiBase
-      ? 'live'
+    mpesa: paystack
+      ? 'paystack'
+      : ENV.apiBase
+        ? 'live'
       : ENV.mpesaTill || ENV.mpesaPaybill
         ? 'manual'
         : demo
           ? 'demo'
           : 'unavailable',
     paypal: ENV.paypalClientId ? 'live' : demo ? 'demo' : 'unavailable',
-    card:
-      ENV.cardCheckoutUrl || (ENV.cardViaApi && ENV.apiBase)
+    card: paystack
+      ? 'paystack'
+      : cardUrl || (ENV.cardViaApi && ENV.apiBase)
         ? 'hosted'
         : demo
           ? 'demo'

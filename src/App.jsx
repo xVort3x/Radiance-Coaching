@@ -5,7 +5,9 @@ import Footer from './components/layout/Footer';
 import Header from './components/layout/Header';
 import StickyBook from './components/layout/StickyBook';
 import LegalPage from './components/legal/LegalPage';
+import PaymentReturn from './components/payment/PaymentReturn';
 import WhatsAppButton from './components/ui/WhatsAppButton';
+import { isPayRef } from './services/paystack';
 import About from './components/sections/About';
 import Approach from './components/sections/Approach';
 import BookingPanel from './components/sections/BookingPanel';
@@ -23,6 +25,17 @@ const legalRoute = () => {
   return match ? match[1] : null;
 };
 
+// Paystack sends clients back to the site with ?reference=RC-...; that shows the payment check.
+const paymentReference = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get('reference') || params.get('trxref');
+    return isPayRef(value) ? value : null;
+  } catch {
+    return null;
+  }
+};
+
 function useLegalRoute() {
   const [route, setRoute] = useState(legalRoute);
   useEffect(() => {
@@ -35,6 +48,8 @@ function useLegalRoute() {
 
 export default function App() {
   const legal = useLegalRoute();
+  const [payRef] = useState(paymentReference);
+  if (payRef) return <PaymentReturn payRef={payRef} />;
   if (legal) return <LegalPage slug={legal} />;
 
   return (

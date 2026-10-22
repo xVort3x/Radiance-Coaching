@@ -55,8 +55,9 @@ export async function waitForMpesa(id, { signal, intervalMs = 3000, timeoutMs = 
 // ── Card (always on the provider's own secure page) ──────────────────────────
 // With VITE_CARD_CHECKOUT_VIA_API=true:
 //   POST {API}/card/checkout { amount, reference, email, name } -> { url }
-// Otherwise VITE_CARD_CHECKOUT_URL is used as a static payment link.
-export async function createCardCheckout({ amountKes, reference, email, name }) {
+// Otherwise VITE_CARD_CHECKOUT_URL (single session) or VITE_CARD_CHECKOUT_URL_PACKAGE
+// (5-session package) is used as a static payment link.
+export async function createCardCheckout({ amountKes, reference, email, name, isPackage = false }) {
   if (ENV.cardViaApi && ENV.apiBase) {
     const data = await readJson(
       await fetch(`${ENV.apiBase}/card/checkout`, {
@@ -68,7 +69,7 @@ export async function createCardCheckout({ amountKes, reference, email, name }) 
     if (!data.url) throw new Error('No checkout link was returned.');
     return data.url;
   }
-  const url = new URL(ENV.cardCheckoutUrl);
+  const url = new URL(isPackage ? ENV.cardCheckoutUrlPackage : ENV.cardCheckoutUrl);
   url.searchParams.set('ref', reference);
   return url.toString();
 }

@@ -16,11 +16,12 @@ import Notice from '../../ui/Notice';
 
 const demoReceipt = () => `DEMO${Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)}`;
 
-export default function CardPanel({ mode, amountKes, reference, details, onSuccess }) {
+export default function CardPanel({ mode, amountKes, isPackage = false, reference, details, onSuccess }) {
   if (mode === 'demo') return <DemoCard amountKes={amountKes} onSuccess={onSuccess} />;
   return (
     <HostedCheckout
       amountKes={amountKes}
+      isPackage={isPackage}
       reference={reference}
       details={details}
       onSuccess={onSuccess}
@@ -29,7 +30,7 @@ export default function CardPanel({ mode, amountKes, reference, details, onSucce
 }
 
 // ── Real deployments: card details are typed on the provider's own page ──────
-function HostedCheckout({ amountKes, reference, details, onSuccess }) {
+function HostedCheckout({ amountKes, isPackage, reference, details, onSuccess }) {
   const [phase, setPhase] = useState('idle'); // idle | opening | opened
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
@@ -43,6 +44,7 @@ function HostedCheckout({ amountKes, reference, details, onSuccess }) {
         reference,
         email: details.email,
         name: details.name,
+        isPackage,
       });
       setUrl(target);
       window.open(target, '_blank', 'noopener,noreferrer');

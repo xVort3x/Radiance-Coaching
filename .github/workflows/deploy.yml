@@ -33,6 +33,7 @@ jobs:
           # variables > Actions > Variables. They are public once built.
           VITE_FORM_ENDPOINT: ${{ vars.VITE_FORM_ENDPOINT }}
           VITE_BOOKING_API_URL: ${{ vars.VITE_BOOKING_API_URL }}
+          VITE_PAYSTACK: ${{ vars.VITE_PAYSTACK }}
           VITE_WHATSAPP_NUMBER: ${{ vars.VITE_WHATSAPP_NUMBER }}
           VITE_DEMO_PAYMENTS: ${{ vars.VITE_DEMO_PAYMENTS }}
           VITE_KES_PER_USD: ${{ vars.VITE_KES_PER_USD }}
@@ -42,6 +43,7 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_PAYPAL_CLIENT_ID: ${{ vars.VITE_PAYPAL_CLIENT_ID }}
           VITE_CARD_CHECKOUT_URL: ${{ vars.VITE_CARD_CHECKOUT_URL }}
+          VITE_CARD_CHECKOUT_URL_PACKAGE: ${{ vars.VITE_CARD_CHECKOUT_URL_PACKAGE }}
           VITE_CARD_CHECKOUT_VIA_API: ${{ vars.VITE_CARD_CHECKOUT_VIA_API }}
 
       - uses: actions/upload-pages-artifact@v3

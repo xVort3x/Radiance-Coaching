@@ -290,8 +290,10 @@ function Dialog({ initialOffer, initialBundle, onClose }) {
                     <PaymentStep
                       offer={offer}
                       quote={quote}
+                      instant={instant}
                       reference={reference}
                       details={details}
+                      onTaken={pickAnother}
                       onPaid={finish}
                       onPayLater={() => finish({ method: 'none', status: 'pay-later' })}
                     />

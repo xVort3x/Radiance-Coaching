@@ -104,6 +104,19 @@ Pick one:
   - `POST {API}/mpesa/stk-push` with `{ phone: "2547XXXXXXXX", amount: 5000, reference }`, returning `{ checkoutRequestId }`
   - `GET {API}/mpesa/status/:checkoutRequestId`, returning `{ status: "pending" | "paid" | "failed", receipt?, message? }`
 
+### Card and M-Pesa with Paystack (recommended)
+
+Paystack takes Visa, Mastercard and M-Pesa on its own secure page. The booking helper creates the payment, then asks Paystack whether the right amount arrived before it confirms the booking, so nobody can fake a payment. It needs the booking helper (above) to be set up first.
+
+1. In your Paystack dashboard open **Settings > API Keys & Webhooks** and copy the **Secret key**. Start with the **test** key (`sk_test_...`) and switch to the live key (`sk_live_...`) when you are ready for real money. Never put the secret key on GitHub or in the website.
+2. In the Apps Script project open **Project settings > Script properties > Add script property**. Name: `PAYSTACK_SECRET_KEY`. Value: the key.
+3. In the editor choose `setup` and press **Run** once more. This adds a check every 5 minutes that confirms people who paid but closed the page.
+4. **Deploy > Manage deployments > edit (pencil) > Version: New version > Deploy.** The web app address stays the same.
+5. In GitHub open **Settings > Secrets and variables > Actions > Variables** and add `VITE_PAYSTACK` = `true` (and `VITE_BOOKING_API_URL` if it is not there yet). Run the deploy again from the **Actions** tab.
+6. In the Paystack dashboard, under **Settings > API Keys & Webhooks**, you may set the **Callback URL** to your website address. The helper also sends this itself on every payment.
+
+Prices are decided by the helper, not the page, so a visitor cannot change what they pay. If Paystack is switched on, the M-Pesa and Card choices both open Paystack; the manual Paybill option and the static card links are not used.
+
 ### PayPal
 
 Create a PayPal app at developer.paypal.com and set `VITE_PAYPAL_CLIENT_ID` to its public **client ID**. PayPal does not support Kenyan Shillings, so the site charges the US dollar equivalent. Set `VITE_KES_PER_USD` and update it when the rate moves.
@@ -114,7 +127,7 @@ PayPal payments are captured in the visitor's browser and are not verified by a 
 
 Card details are never typed into this site. Sign up with a provider that supports Kenya (for example Pesapal, Flutterwave or DPO) and either:
 
-- set `VITE_CARD_CHECKOUT_URL` to a payment link, or
+- set `VITE_CARD_CHECKOUT_URL` to a payment link for one KSh 5,000 session, and `VITE_CARD_CHECKOUT_URL_PACKAGE` to a second link for the 5-session package (KSh 23,750). A payment link has one fixed amount, so each price needs its own. If the package link is missing, card is simply not offered for packages. Or
 - set `VITE_CARD_CHECKOUT_VIA_API=true` and implement `POST {API}/card/checkout` with `{ amount, reference, email, name }`, returning `{ url }`.
 
 The visitor pays on the provider's page and comes back to confirm. Anne confirms the payment in the provider's dashboard.

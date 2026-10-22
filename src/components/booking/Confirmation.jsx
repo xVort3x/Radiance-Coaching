@@ -9,7 +9,7 @@ import Button from '../ui/Button';
 import CopyButton from '../ui/CopyButton';
 import Notice from '../ui/Notice';
 
-function AnimatedCheck() {
+export function AnimatedCheck() {
   return (
     <svg viewBox="0 0 64 64" className="h-16 w-16" aria-hidden="true">
       <motion.circle

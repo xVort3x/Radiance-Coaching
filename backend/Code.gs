@@ -39,16 +39,32 @@ var CONFIG = {
     7: null,
   },
   ALLOWED_MINUTES: [30, 60],
+  // Online payments through Paystack (card and M-Pesa). These prices must match src/config/site.js.
+  // The secret key is NOT stored here: see the README, "Paystack".
+  OFFERS: {
+    discovery: { name: 'Free discovery call', minutes: 30, price: 0 },
+    life: { name: 'Life Coaching', minutes: 60, price: 5000 },
+    grief: { name: 'Grief and End-of-Life Coaching', minutes: 60, price: 5000 },
+    betrayal: { name: 'Betrayal Trauma Coaching', minutes: 60, price: 5000 },
+  },
+  PACKAGE_SESSIONS: 5,
+  PACKAGE_DISCOUNT_PER_SESSION: 250,
+  // How long a time is kept for someone who has been sent to Paystack to pay.
+  PAYMENT_HOLD_MINUTES: 45,
+  // Where Paystack may send clients back to after they pay.
+  ALLOWED_RETURN: /^https:\/\/(radiancecoaching\.co\.ke|www\.radiancecoaching\.co\.ke|[a-z0-9-]+\.github\.io)(\/|$)/i,
 };
 
 var COL = {
   ref: 0, status: 1, created: 2, when: 3, service: 4, pkg: 5, total: 6, name: 7, email: 8,
   phone: 9, notes: 10, payment: 11, receipt: 12, start: 13, end: 14, holdUntil: 15, minutes: 16,
+  offerId: 17, isPackage: 18, sessions: 19, each: 20, localTime: 21, payRef: 22,
 };
 var BOOKING_HEADERS = [
   'Reference', 'Status', 'Booked on', 'Session (East Africa Time)', 'Service', 'Package', 'Total (KSh)',
   'Name', 'Email', 'Phone', 'Notes from client', 'Payment', 'Payment code',
   'Start (ms)', 'End (ms)', 'Hold until (ms)', 'Minutes',
+  'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference',
 ];
 var MINUTE_MS = 60000;
 var HOUR_MS = 3600000;
@@ -73,6 +89,8 @@ function doPost(e) {
     if (data.action === 'hold') return json_(holdSlot_(data));
     if (data.action === 'book') return json_(bookSlot_(data));
     if (data.action === 'contact') return json_(contact_(data));
+    if (data.action === 'payinit') return json_(payInit_(data));
+    if (data.action === 'payverify') return json_(payVerify_(data));
     return json_({ ok: false, code: 'bad_request', message: 'Unknown action.' });
   } catch (err) {
     return json_({ ok: false, code: 'error', message: String(err && err.message ? err.message : err) });
@@ -95,6 +113,16 @@ function setup() {
       '\n\nNext: deploy this script as a web app and copy its address into the website settings (see the README).',
   });
   Logger.log('Bookings sheet: ' + ss.getUrl());
+  enableAutoChecks();
+}
+
+// Checks every few minutes for clients who paid on Paystack but did not come back
+// to the website, and confirms their bookings. setup() turns this on.
+function enableAutoChecks() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'reconcilePayments') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('reconcilePayments').timeBased().everyMinutes(5).create();
 }
 
 // ───────────────────────────── Sheet storage ─────────────────────────────
@@ -155,6 +183,18 @@ function readBookings_() {
       start: Number(r[COL.start]),
       end: Number(r[COL.end]),
       holdUntil: Number(r[COL.holdUntil]) || 0,
+      name: String(r[COL.name] || ''),
+      phone: String(r[COL.phone] || ''),
+      notes: String(r[COL.notes] || ''),
+      service: String(r[COL.service] || ''),
+      total: Number(r[COL.total]) || 0,
+      minutes: Number(r[COL.minutes]) || 0,
+      offerId: String(r[COL.offerId] || ''),
+      isPackage: String(r[COL.isPackage]) === 'yes',
+      sessions: Number(r[COL.sessions]) || 1,
+      each: Number(r[COL.each]) || 0,
+      localTime: String(r[COL.localTime] || ''),
+      payRef: String(r[COL.payRef] || ''),
     });
   }
   return out;
@@ -184,7 +224,7 @@ function toMs_(value) {
 
 function isActive_(b, nowMs) {
   if (b.status === 'confirmed') return true;
-  if (b.status === 'hold') return b.holdUntil > nowMs;
+  if (b.status === 'hold' || b.status === 'awaiting-payment') return b.holdUntil > nowMs;
   return false;
 }
 
@@ -309,7 +349,7 @@ function holdSlot_(data) {
       if (b.ref === ref && b.status === 'hold') setStatus_(b.row, 'released');
     });
     var live = bookings.filter(function (b) {
-      return b.status === 'hold' && b.holdUntil > nowMs && b.ref !== ref;
+      return (b.status === 'hold' || b.status === 'awaiting-payment') && b.holdUntil > nowMs && b.ref !== ref;
     });
     if (live.length >= 40) return { ok: false, code: 'busy', message: 'Please try again in a few minutes.' };
     if (email && live.filter(function (b) { return b.email.toLowerCase() === email; }).length >= 3) {
@@ -347,6 +387,12 @@ function rowFor_(b) {
   row[COL.end] = b.slot.endMs;
   row[COL.holdUntil] = b.holdUntil || '';
   row[COL.minutes] = b.slot.minutes;
+  row[COL.offerId] = b.offerId || '';
+  row[COL.isPackage] = b.isPackage ? 'yes' : '';
+  row[COL.sessions] = b.sessions || '';
+  row[COL.each] = b.each || '';
+  row[COL.localTime] = b.localTime || '';
+  row[COL.payRef] = b.payRef || '';
   return row;
 }
 
@@ -399,6 +445,8 @@ function bookSlot_(data) {
         ref: ref, status: status, nowMs: nowMs, slot: slot, name: booking.name, email: booking.email,
         phone: booking.phone, notes: booking.notes, service: booking.service, pkg: booking.pkg,
         total: booking.total, payment: booking.paymentText, receipt: booking.receipt,
+        offerId: cleanLine_(data.offerId, 20), isPackage: booking.isPackage, sessions: booking.sessions,
+        each: booking.each, localTime: booking.localTime,
       }),
     );
     return { ok: true, status: status };
@@ -600,5 +648,229 @@ function sendCoachEmail_(b, needsNewTime) {
     name: CONFIG.BUSINESS_NAME + ' website',
     subject: (needsNewTime ? 'ACTION NEEDED: ' : 'New booking: ') + b.service + ' with ' + b.name + ' (' + b.ref + ')',
     body: lines.join('\n'),
+  });
+}
+
+// ───────────────────────────── Online payments (Paystack) ─────────────────────────────
+// Card and M-Pesa are paid on Paystack's own secure page. The website sends the client there
+// with payInit_, and when the client comes back it asks payVerify_ whether the money arrived.
+// Every amount is checked here against Paystack, so the website cannot be tricked into
+// confirming an unpaid booking. reconcilePayments() catches clients who paid but never came back.
+
+function paystackKey_() {
+  return PropertiesService.getScriptProperties().getProperty('PAYSTACK_SECRET_KEY') || '';
+}
+
+function paystackCall_(method, path, body) {
+  var options = {
+    method: method,
+    headers: { Authorization: 'Bearer ' + paystackKey_() },
+    muteHttpExceptions: true,
+  };
+  if (body) {
+    options.contentType = 'application/json';
+    options.payload = JSON.stringify(body);
+  }
+  var response = UrlFetchApp.fetch('https://api.paystack.co' + path, options);
+  var parsed = {};
+  try {
+    parsed = JSON.parse(response.getContentText());
+  } catch (err) {
+    parsed = {};
+  }
+  return { code: response.getResponseCode(), body: parsed };
+}
+
+function updateRow_(rowNumber, fields) {
+  var sheet = bookingsSheet_();
+  Object.keys(fields).forEach(function (key) {
+    sheet.getRange(rowNumber, COL[key] + 1).setValue(fields[key]);
+  });
+}
+
+function infoFor_(row) {
+  return {
+    ref: row.ref,
+    when: whenText_(row.start),
+    service: row.service,
+    minutes: row.minutes,
+    isPackage: row.isPackage,
+    sessions: row.sessions,
+    email: row.email,
+    name: row.name,
+    start: row.start,
+    total: row.total,
+  };
+}
+
+function bookingFromRow_(row, paymentText, receipt) {
+  return {
+    ref: row.ref,
+    nowMs: Date.now(),
+    slot: { startMs: row.start, endMs: row.end, minutes: row.minutes },
+    name: row.name,
+    email: row.email.toLowerCase(),
+    phone: row.phone,
+    notes: row.notes,
+    service: row.service,
+    isPackage: row.isPackage,
+    sessions: row.sessions,
+    total: row.total,
+    each: row.each,
+    discovery: false,
+    paymentText: paymentText,
+    receipt: receipt,
+    localTime: row.localTime,
+  };
+}
+
+function payInit_(data) {
+  var nowMs = Date.now();
+  var ref = readRef_(data);
+  var name = cleanLine_(data.name, 80);
+  var email = cleanLine_(data.email, 120).toLowerCase();
+  var offerId = cleanLine_(data.offerId, 20);
+  var offer = CONFIG.OFFERS[offerId];
+  if (!ref || name.length < 2 || !validEmail_(email) || !offer || offer.price <= 0) {
+    return { ok: false, code: 'bad_request', message: 'Missing details.' };
+  }
+  if (!paystackKey_()) return { ok: false, code: 'not_configured', message: 'Online payments are not switched on yet.' };
+  var slot = readSlot_({ start: data.start, minutes: offer.minutes }, nowMs);
+  if (slot.error) return { ok: false, code: 'invalid', message: slot.error };
+
+  // The price is worked out here, never taken from the website.
+  var isPackage = Boolean(data.isPackage);
+  var sessions = isPackage ? CONFIG.PACKAGE_SESSIONS : 1;
+  var each = offer.price - (isPackage ? CONFIG.PACKAGE_DISCOUNT_PER_SESSION : 0);
+  var total = each * sessions;
+
+  var back = String(data.returnUrl || '').split('#')[0].split('?')[0];
+  var returnUrl = back.length < 200 && /^\S+$/.test(back) && CONFIG.ALLOWED_RETURN.test(back) ? back : CONFIG.SITE_URL + '/';
+
+  var outcome = withLock_(function () {
+    expireHolds_(nowMs);
+    var bookings = readBookings_();
+    var mine = bookings.filter(function (b) { return b.ref === ref; });
+    if (mine.some(function (b) { return b.status === 'confirmed'; })) return { ok: false, code: 'already_booked' };
+    var live = bookings.filter(function (b) {
+      return (b.status === 'hold' || b.status === 'awaiting-payment') && b.holdUntil > nowMs && b.ref !== ref;
+    });
+    if (live.length >= 40) return { ok: false, code: 'busy', message: 'Please try again in a few minutes.' };
+    if (live.filter(function (b) { return b.email.toLowerCase() === email; }).length >= 3) {
+      return { ok: false, code: 'busy', message: 'Too many pending payments for this email. Please try again soon.' };
+    }
+    if (!isFree_(slot.startMs, slot.endMs, nowMs, ref)) return { ok: false, code: 'taken' };
+
+    mine.forEach(function (b) {
+      if (b.status === 'hold' || b.status === 'awaiting-payment') setStatus_(b.row, 'released');
+    });
+    var payRef = ref + '-' + (mine.filter(function (b) { return b.payRef; }).length + 1);
+    bookingsSheet_().appendRow(
+      rowFor_({
+        ref: ref, status: 'awaiting-payment', nowMs: nowMs, slot: slot, name: name, email: email,
+        phone: cleanLine_(data.phone, 40), notes: clean_(data.notes, 700), service: offer.name,
+        pkg: isPackage ? sessions + ' sessions at KSh ' + each : '', total: total,
+        payment: 'Waiting for payment on Paystack', holdUntil: nowMs + CONFIG.PAYMENT_HOLD_MINUTES * MINUTE_MS,
+        offerId: offerId, isPackage: isPackage, sessions: sessions, each: each,
+        localTime: cleanLine_(data.localTime, 80), payRef: payRef,
+      }),
+    );
+    return { ok: true, payRef: payRef };
+  });
+  if (!outcome.ok) return outcome;
+
+  var res = paystackCall_('post', '/transaction/initialize', {
+    email: email,
+    amount: String(total * 100),
+    currency: 'KES',
+    reference: outcome.payRef,
+    callback_url: returnUrl,
+    metadata: JSON.stringify({ booking: ref, service: offer.name, client: name }),
+  });
+  var checkout = res.body && res.body.data && res.body.data.authorization_url;
+  if (res.code !== 200 || !checkout) {
+    var failed = readBookings_().filter(function (b) { return b.payRef === outcome.payRef; })[0];
+    if (failed) updateRow_(failed.row, { status: 'init-failed', payment: 'Paystack did not start: ' + cleanLine_(res.body && res.body.message, 120) });
+    return { ok: false, code: 'gateway', message: 'The payment page could not be opened. Please try again.' };
+  }
+  return { ok: true, url: checkout };
+}
+
+function payVerify_(data) {
+  var result = settlePayment_(cleanLine_(data.payRef, 40));
+  return { ok: true, state: result.state, info: result.info || null, emailed: Boolean(result.emailed) };
+}
+
+// Looks at one Paystack payment and, if the money has arrived, confirms the booking.
+// States: confirmed, needs-new-time, pending, failed, problem, not_found, error.
+function settlePayment_(payRef) {
+  if (!/^RC-[A-Za-z0-9]+-\d+$/.test(payRef)) return { state: 'not_found' };
+  var row = readBookings_().filter(function (b) { return b.payRef === payRef; })[0];
+  if (!row) return { state: 'not_found' };
+  if (row.status === 'confirmed') return { state: 'confirmed', info: infoFor_(row) };
+  if (row.status === 'needs-new-time') return { state: 'needs-new-time', info: infoFor_(row) };
+  if (row.status === 'payment-problem' || row.status === 'init-failed') return { state: 'problem' };
+  if (!paystackKey_()) return { state: 'error' };
+
+  var res = paystackCall_('get', '/transaction/verify/' + encodeURIComponent(payRef));
+  var tx = res.body && res.body.data;
+  if (res.code !== 200 || !tx) return { state: 'pending' };
+  var status = String(tx.status);
+  if (status === 'failed' || status === 'reversed') return { state: 'failed' };
+  if (status !== 'success') return { state: 'pending' };
+
+  // The money arrived. Make sure it is the right amount in the right currency.
+  var rightAmount = Number(tx.amount) === row.total * 100 && (!tx.currency || String(tx.currency) === 'KES');
+  if (!rightAmount) {
+    updateRow_(row.row, { status: 'payment-problem', payment: 'Paystack amount or currency did not match. Check Paystack.' });
+    safely_(function () {
+      MailApp.sendEmail({
+        to: CONFIG.COACH_EMAIL,
+        name: CONFIG.BUSINESS_NAME + ' website',
+        subject: 'ACTION NEEDED: payment problem for booking ' + row.ref,
+        body: 'A Paystack payment (' + payRef + ') for ' + row.name + ' (' + row.email + ') did not match the expected amount of KSh ' +
+          row.total + '. Please check it in your Paystack dashboard.',
+      });
+    });
+    return { state: 'problem' };
+  }
+
+  var channel = tx.channel === 'mobile_money' ? 'M-Pesa' : tx.channel === 'card' ? 'card' : 'Paystack';
+  var paymentText = 'Paid online by ' + channel + ' (Paystack)';
+  var receipt = cleanLine_(tx.receipt_number || tx.id || payRef, 40);
+
+  var outcome = withLock_(function () {
+    var fresh = readBookings_().filter(function (b) { return b.payRef === payRef; })[0];
+    if (fresh.status === 'confirmed' || fresh.status === 'needs-new-time') return { already: fresh.status };
+    var free = isFree_(fresh.start, fresh.end, Date.now(), fresh.ref);
+    var next = free ? 'confirmed' : 'needs-new-time';
+    updateRow_(fresh.row, { status: next, payment: paymentText, receipt: receipt, holdUntil: '' });
+    return { status: next };
+  });
+  if (outcome.already) {
+    return { state: outcome.already === 'confirmed' ? 'confirmed' : 'needs-new-time', info: infoFor_(row) };
+  }
+
+  var booking = bookingFromRow_(row, paymentText, receipt);
+  if (outcome.status === 'needs-new-time') {
+    safely_(function () { sendCoachEmail_(booking, true); });
+    return { state: 'needs-new-time', info: infoFor_(row) };
+  }
+  safely_(function () { sendCoachEmail_(booking, false); });
+  var emailed = safely_(function () { sendClientEmail_(booking); });
+  return { state: 'confirmed', info: infoFor_(row), emailed: emailed };
+}
+
+// Runs every few minutes (see enableAutoChecks). Confirms clients who paid but closed the page.
+function reconcilePayments() {
+  if (!paystackKey_()) return;
+  var nowMs = Date.now();
+  readBookings_().forEach(function (b) {
+    var waiting = b.payRef && (b.status === 'awaiting-payment' || b.status === 'released');
+    if (!waiting || nowMs - b.holdUntil > 6 * HOUR_MS) {
+      if (waiting) updateRow_(b.row, { status: 'unpaid' });
+      return;
+    }
+    settlePayment_(b.payRef);
   });
 }

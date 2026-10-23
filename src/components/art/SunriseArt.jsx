@@ -36,16 +36,16 @@ export default function SunriseArt({ className = '', align = 'xMidYMax' }) {
           <stop offset="100%" stopColor="#E9B44C" />
         </linearGradient>
         <linearGradient id="rc-hill-back" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C9D9CE" />
-          <stop offset="100%" stopColor="#BDD0C3" />
+          <stop offset="0%" style={{ stopColor: 'var(--hill-back-top)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--hill-back-bottom)' }} />
         </linearGradient>
         <linearGradient id="rc-hill-mid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9DB9A6" />
-          <stop offset="100%" stopColor="#7FA08C" />
+          <stop offset="0%" style={{ stopColor: 'var(--hill-mid-top)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--hill-mid-bottom)' }} />
         </linearGradient>
         <linearGradient id="rc-hill-front" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4B7260" />
-          <stop offset="100%" stopColor="#2F4A3F" />
+          <stop offset="0%" style={{ stopColor: 'var(--hill-front-top)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--hill-front-bottom)' }} />
         </linearGradient>
       </defs>
 

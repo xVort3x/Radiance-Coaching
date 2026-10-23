@@ -10,6 +10,7 @@ import Logo from '../art/Logo';
 import Button from '../ui/Button';
 import Container from '../ui/Container';
 import Notice from '../ui/Notice';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const TRIES = 8; // about 30 seconds of checking before suggesting the client waits for the email
 const WAIT_MS = 4000;
@@ -105,6 +106,7 @@ export default function PaymentReturn({ payRef }) {
           <a href={window.location.pathname} aria-label={`${SITE.name}, back to the home page`}>
             <Logo />
           </a>
+          <ThemeToggle />
         </Container>
       </header>
 
@@ -135,7 +137,7 @@ export default function PaymentReturn({ payRef }) {
                     session is the time shown below.
                   </Notice>
                 )}
-                <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-white">
+                <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-surface">
                   {[
                     ['Reference', info.ref],
                     ['Service', `${info.service}, ${info.minutes} minutes${info.isPackage ? ' each' : ''}`],

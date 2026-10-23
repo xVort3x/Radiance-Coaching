@@ -26,7 +26,7 @@ export default function Process() {
           />
           {STEPS.map((step, index) => (
             <li key={step.title} className="relative flex gap-6">
-              <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-moss-700 font-display text-xl text-white">
+              <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-action font-display text-xl text-white">
                 {index + 1}
               </span>
               <div className="pt-1">

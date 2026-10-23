@@ -4,8 +4,6 @@ const env = import.meta.env;
 const flag = (value) => String(value ?? '').trim().toLowerCase() === 'true';
 const text = (value) => String(value ?? '').trim();
 
-const rate = Number(env.VITE_KES_PER_USD);
-
 // WhatsApp number to international digits only, e.g. 0712 345 678 -> 254712345678.
 function whatsappDigits(value) {
   const digits = text(value).replace(/\D/g, '');
@@ -24,11 +22,9 @@ export const ENV = {
   mpesaTill: text(env.VITE_MPESA_TILL),
   mpesaPaybill: text(env.VITE_MPESA_PAYBILL),
   mpesaAccount: text(env.VITE_MPESA_ACCOUNT),
-  paypalClientId: text(env.VITE_PAYPAL_CLIENT_ID),
   cardCheckoutUrl: text(env.VITE_CARD_CHECKOUT_URL),
   cardCheckoutUrlPackage: text(env.VITE_CARD_CHECKOUT_URL_PACKAGE),
   cardViaApi: flag(env.VITE_CARD_CHECKOUT_VIA_API),
-  kesPerUsd: Number.isFinite(rate) && rate > 0 ? rate : 129,
   // Card and M-Pesa through Paystack (needs the booking helper). See the README.
   paystack: flag(env.VITE_PAYSTACK),
   demoFlag: flag(env.VITE_DEMO_PAYMENTS),

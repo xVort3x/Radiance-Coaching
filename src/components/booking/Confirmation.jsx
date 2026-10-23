@@ -17,7 +17,7 @@ export function AnimatedCheck() {
         cy="32"
         r="28"
         fill="none"
-        stroke="#2F4A3F"
+        style={{ stroke: 'var(--color-logo-ground)' }}
         strokeWidth="3"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
@@ -152,7 +152,7 @@ export default function Confirmation({ booking, delivery, emailed, onPickAnother
       )}
 
       {delivery !== 'taken' && (
-      <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-white">
+      <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-surface">
         {[
           ['Reference', ref],
           ['Service', `${offer.name}, ${offer.minutes} minutes${quote.isPackage ? ' each' : ''}`],

@@ -6,6 +6,7 @@ import { useBooking } from '../../booking/BookingContext';
 import Logo from '../art/Logo';
 import Button from '../ui/Button';
 import Container from '../ui/Container';
+import ThemeToggle from '../ui/ThemeToggle';
 import { cx } from '../../lib/cx';
 
 export default function Header() {
@@ -58,7 +59,8 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle />
           <Button size="sm" variant="sun" className="hidden sm:inline-flex" onClick={book}>
             <CalendarCheck size={17} aria-hidden="true" />
             Book now

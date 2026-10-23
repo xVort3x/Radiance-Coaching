@@ -65,7 +65,7 @@ export default function Hero() {
                   alt=""
                   width="48"
                   height="48"
-                  className="h-12 w-12 rounded-full object-cover object-[50%_18%] ring-2 ring-white"
+                  className="h-12 w-12 rounded-full object-cover object-[50%_18%] ring-2 ring-surface"
                 />
               )}
               <p className="text-[0.95rem] leading-snug text-fig-700">

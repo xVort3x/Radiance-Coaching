@@ -206,7 +206,7 @@ export default function Calendar({ value, onChange, now, minutes, busy = NO_BUSY
               {selected && (
                 <motion.span
                   layoutId="calendar-selected"
-                  className="absolute inset-0.5 rounded-full bg-moss-700"
+                  className="absolute inset-0.5 rounded-full bg-action"
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}

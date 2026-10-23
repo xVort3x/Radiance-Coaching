@@ -7,7 +7,7 @@ function Field({ id, label, hint, error, children }) {
       {children}
       {hint && !error && <p className="mt-1.5 text-sm text-fig-600">{hint}</p>}
       {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-sm text-[#b4452f]">
+        <p id={`${id}-error`} className="mt-1.5 text-sm text-err-icon">
           {error}
         </p>
       )}

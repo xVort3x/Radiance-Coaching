@@ -73,25 +73,3 @@ export async function createCardCheckout({ amountKes, reference, email, name, is
   url.searchParams.set('ref', reference);
   return url.toString();
 }
-
-// ── PayPal (client-side Smart Buttons) ───────────────────────────────────────
-let paypalLoading = null;
-
-export function loadPayPal(clientId) {
-  if (typeof window !== 'undefined' && window.paypal?.Buttons) return Promise.resolve(window.paypal);
-  if (paypalLoading) return paypalLoading;
-  paypalLoading = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-      clientId,
-    )}&currency=USD&intent=capture&components=buttons`;
-    script.async = true;
-    script.onload = () => resolve(window.paypal);
-    script.onerror = () => {
-      paypalLoading = null;
-      reject(new Error('PayPal could not be loaded.'));
-    };
-    document.head.appendChild(script);
-  });
-  return paypalLoading;
-}

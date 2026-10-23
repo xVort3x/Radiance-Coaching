@@ -9,7 +9,7 @@ Built with React, Tailwind CSS 4, Framer Motion and Lucide React.
 
 - A one-page site: hero, the three services (Life Coaching, Grief and End-of-Life Coaching, Betrayal Trauma Coaching), a free discovery call for people who are not sure what they need, approach, about Anne, how coaching works, FAQ and contact.
 - An animated booking window with its own calendar and time slots (East Africa Time, with the visitor's local time shown beside each slot).
-- A payment step with animated **M-Pesa**, **PayPal** and **Visa / Mastercard** options.
+- A payment step with animated **M-Pesa** and **Visa / Mastercard** options.
 - A confirmation screen with an "Add to my calendar" file (.ics).
 - Keyboard-friendly, screen-reader labelled, respects reduced-motion settings, works on phones.
 
@@ -25,6 +25,10 @@ npm run preview
 Needs Node 20.19 or newer.
 
 `npm run dev` always runs payments in **preview mode** so you can click through every payment option. Nothing is charged or sent in preview mode.
+
+### Light and dark mode
+
+A sun/moon button in the header switches between light and dark. The choice is remembered on that device. Until someone chooses, the site follows the device's own setting. The colours for both modes live at the top of `src/index.css` (the `:root[data-theme='dark']` block), so a colour can be changed in one place.
 
 ## Edit your content
 
@@ -89,7 +93,16 @@ The helper is a small free program in `backend/Code.gs` that runs in Anne's Goog
 - Statuses: `confirmed`, `hold` (waiting for payment, expires after 15 minutes), `needs-new-time` (a client paid but someone else booked that time first, so Anne should contact them), `released` and `expired` (ignore these).
 - Hours and the meeting link live at the top of `Code.gs`. If you change Anne's hours, change `src/config/site.js` too so the website and the helper agree.
 
-**Limits:** Gmail lets a free account send about 100 emails a day, which is plenty for a coaching practice. Anne's M-Pesa and PayPal payments are still checked by hand.
+**Limits:** Gmail lets a free account send about 100 emails a day, which is plenty for a coaching practice. Manual Paybill payments are still checked by hand.
+
+### Google Calendar (reminders for Anne)
+
+Every confirmed booking is added to Anne's own Google Calendar (the account the helper runs as), with a pop-up and an email reminder **one day before**. The event shows the client's name, email, phone, notes and the video link. If Anne changes a booking's **Status** in the sheet to `cancelled`, its calendar event is removed within 5 minutes.
+
+- To change the reminder, edit `CALENDAR_REMINDER_MINUTES` at the top of `Code.gs` (1440 = one day, 60 = one hour).
+- To switch calendar events off, set `CALENDAR_ENABLED: false`.
+- After pasting an updated `Code.gs`, run `setup` once in the editor and allow the new Calendar permission, then **Deploy > Manage deployments > pencil > New version > Deploy**. `setup` also adds any already-confirmed future bookings to the calendar.
+- Clients are not invited from the calendar. They already receive their own confirmation email with a calendar file attached.
 
 ### WhatsApp
 
@@ -117,12 +130,6 @@ Paystack takes Visa, Mastercard and M-Pesa on its own secure page. The booking h
 
 Prices are decided by the helper, not the page, so a visitor cannot change what they pay. If Paystack is switched on, the M-Pesa and Card choices both open Paystack; the manual Paybill option and the static card links are not used.
 
-### PayPal
-
-Create a PayPal app at developer.paypal.com and set `VITE_PAYPAL_CLIENT_ID` to its public **client ID**. PayPal does not support Kenyan Shillings, so the site charges the US dollar equivalent. Set `VITE_KES_PER_USD` and update it when the rate moves.
-
-PayPal payments are captured in the visitor's browser and are not verified by a server. Check each one in your PayPal account before the session.
-
 ### Visa / Mastercard
 
 Card details are never typed into this site. Sign up with a provider that supports Kenya (for example Pesapal, Flutterwave or DPO) and either:
@@ -139,7 +146,7 @@ Add `?demo=payments` to the page address (or set `VITE_DEMO_PAYMENTS=true`) to c
 ## Things to know
 
 - **Shared availability needs the booking helper.** Without `VITE_BOOKING_API_URL` the calendar shows Anne's weekly hours but cannot see bookings already made, so two people could request the same slot. With the helper set up (see above), taken times are hidden and held while someone pays.
-- **Payments confirm differently by method.** M-Pesa with a backend is confirmed automatically. M-Pesa manual, card and PayPal are confirmed by Anne.
+- **Payments confirm differently by method.** M-Pesa with a backend is confirmed automatically. M-Pesa manual and static card links are confirmed by Anne. Paystack payments are confirmed automatically.
 - **Fonts** (Newsreader and Figtree) load from Google Fonts. To host them yourself, install `@fontsource-variable/newsreader` and `@fontsource-variable/figtree` and import them in `src/main.jsx`.
 - **Privacy policy and terms** are in `src/config/legal.js` and open at `#/privacy` and `#/terms`. They are plain-language drafts, not legal advice. Anne should read them, adjust anything that does not match how she works (for example the 24 hours' notice for changing a session), and consider checking with a lawyer. As a collector of personal data she may also need to register with Kenya's Office of the Data Protection Commissioner (odpc.go.ke).
 - Prices are never shown in the page content. The session price (`SESSION_PRICE_KES` in `src/config/site.js`) appears only at checkout, after a service and time are chosen.

@@ -47,6 +47,10 @@ var CONFIG = {
     grief: { name: 'Grief and End-of-Life Coaching', minutes: 60, price: 5000 },
     betrayal: { name: 'Betrayal Trauma Coaching', minutes: 60, price: 5000 },
   },
+  // Google Calendar: every confirmed booking is added to Anne's own calendar, with a reminder
+  // this many minutes before (1440 = one day). Set CALENDAR_ENABLED to false to switch it off.
+  CALENDAR_ENABLED: true,
+  CALENDAR_REMINDER_MINUTES: 1440,
   PACKAGE_SESSIONS: 5,
   PACKAGE_DISCOUNT_PER_SESSION: 250,
   // How long a time is kept for someone who has been sent to Paystack to pay.
@@ -58,13 +62,13 @@ var CONFIG = {
 var COL = {
   ref: 0, status: 1, created: 2, when: 3, service: 4, pkg: 5, total: 6, name: 7, email: 8,
   phone: 9, notes: 10, payment: 11, receipt: 12, start: 13, end: 14, holdUntil: 15, minutes: 16,
-  offerId: 17, isPackage: 18, sessions: 19, each: 20, localTime: 21, payRef: 22,
+  offerId: 17, isPackage: 18, sessions: 19, each: 20, localTime: 21, payRef: 22, eventId: 23,
 };
 var BOOKING_HEADERS = [
   'Reference', 'Status', 'Booked on', 'Session (East Africa Time)', 'Service', 'Package', 'Total (KSh)',
   'Name', 'Email', 'Phone', 'Notes from client', 'Payment', 'Payment code',
   'Start (ms)', 'End (ms)', 'Hold until (ms)', 'Minutes',
-  'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference',
+  'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference', 'Calendar event',
 ];
 var MINUTE_MS = 60000;
 var HOUR_MS = 3600000;
@@ -114,6 +118,8 @@ function setup() {
   });
   Logger.log('Bookings sheet: ' + ss.getUrl());
   enableAutoChecks();
+  // Adds any already-confirmed future bookings to Anne's calendar. It also asks for Calendar permission.
+  syncCalendar_();
 }
 
 // Checks every few minutes for clients who paid on Paystack but did not come back
@@ -152,6 +158,9 @@ function getSpreadsheet_() {
     bookings.setName('Bookings');
     bookings.getRange(1, 1, 1, BOOKING_HEADERS.length).setValues([BOOKING_HEADERS]).setFontWeight('bold');
     bookings.setFrozenRows(1);
+  } else if (bookings.getLastColumn() < BOOKING_HEADERS.length) {
+    // An older sheet: add the newer column headings.
+    bookings.getRange(1, 1, 1, BOOKING_HEADERS.length).setValues([BOOKING_HEADERS]).setFontWeight('bold');
   }
   var blocked = ss.getSheetByName('Blocked');
   if (!blocked) {
@@ -195,6 +204,7 @@ function readBookings_() {
       each: Number(r[COL.each]) || 0,
       localTime: String(r[COL.localTime] || ''),
       payRef: String(r[COL.payRef] || ''),
+      eventId: String(r[COL.eventId] || ''),
     });
   }
   return out;
@@ -459,6 +469,7 @@ function bookSlot_(data) {
   }
   var coachSent = safely_(function () { sendCoachEmail_(booking, false); });
   var clientSent = safely_(function () { sendClientEmail_(booking); });
+  safely_(syncCalendar_);
   return { ok: true, emailed: clientSent, coachNotified: coachSent };
 }
 
@@ -467,9 +478,63 @@ function safely_(work) {
     work();
     return true;
   } catch (err) {
-    Logger.log('Email problem: ' + err);
+    Logger.log('Background step problem: ' + err);
     return false;
   }
+}
+
+// ───────────────────────────── Google Calendar ─────────────────────────────
+
+// Keeps Anne's Google Calendar in step with the Bookings sheet:
+//  - a confirmed booking gets an event, with a reminder one day ahead (CONFIG.CALENDAR_REMINDER_MINUTES);
+//  - if Anne later changes a booking's status to cancelled (or anything but confirmed), its event is removed.
+// It runs right after each confirmation and every 5 minutes, so a missed one is added on the next pass.
+function syncCalendar_() {
+  if (!CONFIG.CALENDAR_ENABLED) return;
+  var calendar = CalendarApp.getDefaultCalendar();
+  withLock_(function () {
+    var nowMs = Date.now();
+    readBookings_().forEach(function (b) {
+      try {
+        if (b.status === 'confirmed' && !b.eventId && b.end > nowMs) {
+          var event = calendar.createEvent(calendarTitle_(b), new Date(b.start), new Date(b.end), {
+            description: calendarDescription_(b),
+            location: hasMeetingLink_() ? CONFIG.MEETING_LINK : 'Online',
+          });
+          event.removeAllReminders();
+          event.addPopupReminder(CONFIG.CALENDAR_REMINDER_MINUTES);
+          event.addEmailReminder(CONFIG.CALENDAR_REMINDER_MINUTES);
+          updateRow_(b.row, { eventId: event.getId() });
+        } else if (b.eventId && b.status !== 'confirmed') {
+          var old = calendar.getEventById(b.eventId);
+          if (old) old.deleteEvent();
+          updateRow_(b.row, { eventId: '' });
+        }
+      } catch (err) {
+        Logger.log('Calendar problem for ' + b.ref + ': ' + err);
+      }
+    });
+  });
+}
+
+function calendarTitle_(b) {
+  var kind = b.offerId === 'discovery' || /discovery/i.test(b.service) ? 'Discovery call' : b.service || 'Coaching session';
+  return kind + ': ' + b.name + (b.isPackage ? ' (session 1 of ' + b.sessions + ')' : '');
+}
+
+function calendarDescription_(b) {
+  var lines = [
+    'Booking reference: ' + b.ref,
+    'Client: ' + b.name,
+    'Email: ' + b.email,
+    'Phone: ' + (b.phone || 'Not given'),
+    'Service: ' + b.service + ', ' + b.minutes + ' minutes' + (b.isPackage ? ' each' : ''),
+  ];
+  if (b.isPackage) lines.push('Package: ' + b.sessions + ' sessions. Arrange the other ' + (b.sessions - 1) + ' with the client.');
+  if (b.localTime) lines.push('Client local time: ' + b.localTime);
+  if (b.notes) lines.push('', 'Notes from the client:', b.notes);
+  if (hasMeetingLink_()) lines.push('', 'Video link: ' + CONFIG.MEETING_LINK);
+  return lines.join('\n');
 }
 
 // ───────────────────────────── Contact form ─────────────────────────────
@@ -858,11 +923,13 @@ function settlePayment_(payRef) {
   }
   safely_(function () { sendCoachEmail_(booking, false); });
   var emailed = safely_(function () { sendClientEmail_(booking); });
+  safely_(syncCalendar_);
   return { state: 'confirmed', info: infoFor_(row), emailed: emailed };
 }
 
 // Runs every few minutes (see enableAutoChecks). Confirms clients who paid but closed the page.
 function reconcilePayments() {
+  safely_(syncCalendar_);
   if (!paystackKey_()) return;
   var nowMs = Date.now();
   readBookings_().forEach(function (b) {

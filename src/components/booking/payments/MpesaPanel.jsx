@@ -23,7 +23,7 @@ export function PhonePulse() {
           transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.8, ease: 'easeOut' }}
         />
       ))}
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-moss-700 text-white">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-action text-white">
         <Smartphone size={28} />
       </span>
     </div>
@@ -105,7 +105,7 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-moss-100 text-sm text-moss-800">2</span>
             <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-2.5">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-2.5">
                 <span>
                   <span className="block text-sm text-fig-600">{hasTill ? 'Till number' : 'Business number'}</span>
                   <span className="font-medium tracking-wide">{hasTill ? ENV.mpesaTill : ENV.mpesaPaybill}</span>
@@ -113,7 +113,7 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
                 <CopyButton text={hasTill ? ENV.mpesaTill : ENV.mpesaPaybill} />
               </div>
               {!hasTill && (
-                <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-2.5">
                   <span>
                     <span className="block text-sm text-fig-600">Account number</span>
                     <span className="font-medium tracking-wide">{ENV.mpesaAccount || reference}</span>
@@ -121,7 +121,7 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
                   <CopyButton text={ENV.mpesaAccount || reference} />
                 </div>
               )}
-              <div className="rounded-2xl bg-white px-4 py-2.5">
+              <div className="rounded-2xl bg-surface px-4 py-2.5">
                 <span className="block text-sm text-fig-600">Amount</span>
                 <span className="font-medium">{formatKes(amountKes)}</span>
               </div>
@@ -149,7 +149,7 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
             aria-describedby={error ? 'mpesa-error' : undefined}
           />
           {error && (
-            <p id="mpesa-error" className="mt-1.5 text-sm text-[#b4452f]">
+            <p id="mpesa-error" className="mt-1.5 text-sm text-err-icon">
               {error}
             </p>
           )}
@@ -206,7 +206,7 @@ export default function MpesaPanel({ mode, amountKes, reference, defaultPhone, o
           aria-describedby={error ? 'mpesa-error' : 'mpesa-hint'}
         />
         {error ? (
-          <p id="mpesa-error" role="alert" className="mt-1.5 text-sm text-[#b4452f]">
+          <p id="mpesa-error" role="alert" className="mt-1.5 text-sm text-err-icon">
             {error}
           </p>
         ) : (

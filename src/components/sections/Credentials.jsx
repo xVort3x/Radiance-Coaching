@@ -15,12 +15,10 @@ export default function Credentials() {
               className="flex flex-col rounded-[2rem] border border-moss-200 bg-mist-50 p-8 sm:p-10"
             >
               <div className="flex h-40 items-center">
-                <img
-                  src={item.image}
-                  alt={item.alt}
-                  loading="lazy"
-                  className={item.imageClass}
-                />
+                {/* The pale plate only shows in dark mode, so the badge artwork stays readable. */}
+                <span className="-m-3 inline-flex rounded-2xl bg-badge-plate p-3">
+                  <img src={item.image} alt={item.alt} loading="lazy" className={item.imageClass} />
+                </span>
               </div>
               <h3 className="mt-8 text-2xl text-fig-900">{item.title}</h3>
               <p className="mt-1 text-[0.95rem] font-medium text-moss-700">{item.caption}</p>

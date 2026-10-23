@@ -4,7 +4,7 @@ import { cx } from '../../lib/cx';
 const TONES = {
   info: { icon: Info, box: 'border-moss-200 bg-moss-100/60 text-fig-800', iconColor: 'text-moss-600' },
   demo: { icon: FlaskConical, box: 'border-sun-300 bg-sun-100 text-fig-900', iconColor: 'text-sun-700' },
-  error: { icon: CircleAlert, box: 'border-[#e3b3a8] bg-[#fbeeea] text-[#7d2a18]', iconColor: 'text-[#b4452f]' },
+  error: { icon: CircleAlert, box: 'border-[#e3b3a8] bg-[#fbeeea] text-[#7d2a18]', iconColor: 'text-err-icon' },
 };
 
 export default function Notice({ tone = 'info', className, children, role }) {

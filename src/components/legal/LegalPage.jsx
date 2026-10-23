@@ -4,6 +4,7 @@ import { LEGAL_PAGES, LEGAL_UPDATED } from '../../config/legal';
 import { SITE } from '../../config/site';
 import Logo from '../art/Logo';
 import Container from '../ui/Container';
+import ThemeToggle from '../ui/ThemeToggle';
 
 // A simple page for the privacy policy and terms, reached from #/privacy and #/terms.
 export default function LegalPage({ slug }) {
@@ -29,9 +30,12 @@ export default function LegalPage({ slug }) {
           <a href="#" aria-label={`${SITE.name}, back to the home page`}>
             <Logo />
           </a>
-          <a href="#" className="inline-flex items-center gap-2 text-[0.95rem] text-moss-800 hover:text-moss-600">
-            <ArrowLeft size={18} aria-hidden="true" /> Back to the website
-          </a>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a href="#" className="inline-flex items-center gap-2 text-[0.95rem] text-moss-800 hover:text-moss-600">
+              <ArrowLeft size={18} aria-hidden="true" /> Back to the website
+            </a>
+          </div>
         </Container>
       </header>
 

@@ -23,8 +23,8 @@ export default function StepIndicator({ steps, current }) {
               <span
                 className={cx(
                   'flex h-7 w-7 items-center justify-center rounded-full border text-xs transition-colors duration-300',
-                  done && 'border-moss-700 bg-moss-700 text-white',
-                  active && 'border-moss-700 bg-white text-moss-800',
+                  done && 'border-moss-700 bg-action text-white',
+                  active && 'border-moss-700 bg-surface text-moss-800',
                   !done && !active && 'border-fig-200 bg-transparent',
                 )}
               >
@@ -37,7 +37,7 @@ export default function StepIndicator({ steps, current }) {
       </ol>
       <div className="mt-3 h-1 overflow-hidden rounded-full bg-moss-100" aria-hidden="true">
         <motion.div
-          className="h-full rounded-full bg-moss-600"
+          className="h-full rounded-full bg-action"
           initial={false}
           animate={{ width: `${Math.max(progress, 0.04) * 100}%` }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}

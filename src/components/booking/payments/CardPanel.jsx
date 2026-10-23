@@ -57,7 +57,7 @@ function HostedCheckout({ amountKes, isPackage, reference, details, onSuccess })
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-3 rounded-2xl bg-white px-4 py-3.5 text-fig-800">
+      <div className="flex gap-3 rounded-2xl bg-surface px-4 py-3.5 text-fig-800">
         <ShieldCheck size={22} className="mt-0.5 shrink-0 text-moss-600" aria-hidden="true" />
         <p>
           You will pay {formatKes(amountKes)} with Visa or Mastercard on a secure page run by our payment
@@ -151,7 +151,7 @@ function DemoCard({ amountKes, onSuccess }) {
   });
   const err = (key) =>
     errors[key] && (
-      <p id={`card-${key}-error`} className="mt-1.5 text-sm text-[#b4452f]">
+      <p id={`card-${key}-error`} className="mt-1.5 text-sm text-err-icon">
         {errors[key]}
       </p>
     );
@@ -169,7 +169,7 @@ function DemoCard({ amountKes, onSuccess }) {
           animate={{ rotateY: flipped && !reduce ? 180 : 0 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="absolute inset-0 flex flex-col justify-between rounded-3xl bg-gradient-to-br from-moss-700 via-moss-800 to-fig-900 p-5 text-white shadow-[0_20px_40px_-20px_rgba(42,34,51,0.6)] [backface-visibility:hidden]">
+          <div className="on-dark absolute inset-0 flex flex-col justify-between rounded-3xl bg-gradient-to-br from-moss-700 via-moss-800 to-fig-900 p-5 text-white shadow-[0_20px_40px_-20px_rgba(42,34,51,0.6)] [backface-visibility:hidden]">
             <div className="flex items-center justify-between">
               <span className="h-8 w-11 rounded-md bg-gradient-to-br from-sun-200 to-sun-500" />
               <span className="font-display text-xl">{brand ?? 'Card'}</span>
@@ -182,9 +182,9 @@ function DemoCard({ amountKes, onSuccess }) {
               <span>{form.expiry || 'MM/YY'}</span>
             </div>
           </div>
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-fig-800 to-fig-950 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <div className="on-dark absolute inset-0 rounded-3xl bg-gradient-to-br from-fig-800 to-fig-950 [backface-visibility:hidden] [transform:rotateY(180deg)]">
             <div className="mt-6 h-10 bg-black/70" />
-            <div className="mx-5 mt-5 flex items-center justify-end rounded bg-white/90 px-3 py-2 font-mono text-fig-900">
+            <div className="mx-5 mt-5 flex items-center justify-end rounded bg-white/90 px-3 py-2 font-mono text-ink">
               {form.cvc || '•••'}
             </div>
           </div>

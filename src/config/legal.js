@@ -6,7 +6,7 @@
 
 import { SITE } from './site';
 
-export const LEGAL_UPDATED = '21 October 2026';
+export const LEGAL_UPDATED = '23 October 2026';
 
 export const RULES = {
   rescheduleNoticeHours: 24,
@@ -30,7 +30,7 @@ export const PRIVACY = {
         'Your name, email address and, if you give it, your phone number.',
         'The time and type of session you book.',
         'Anything you choose to write in the notes box or in a message. This can be personal, so please share only what feels comfortable.',
-        'Payment details we need to match a payment to a booking: for M-Pesa, the confirmation code and phone number; for PayPal, the transaction reference; for cards, a reference from the payment provider.',
+        'Payment details we need to match a payment to a booking: for M-Pesa, the confirmation code and phone number; for cards, a reference from the payment provider.',
         'Basic technical information your browser sends to any website, such as your device type and approximate location from your internet address.',
       ],
     },
@@ -59,9 +59,9 @@ export const PRIVACY = {
         'Your information is shared only with the services we use to run the practice, and only as far as they need it to do their job:',
       ],
       bullets: [
-        'Google (Google Sheets, Gmail and Google Apps Script), which stores your booking and sends emails from our business account.',
+        'Google (Google Sheets, Google Calendar, Gmail and Google Apps Script), which stores your booking, adds your session to our calendar and sends emails from our business account.',
         'GitHub, which hosts this website, and our domain provider.',
-        'Safaricom (M-Pesa), NCBA Bank, PayPal and our card payment provider, when you pay.',
+        'Safaricom (M-Pesa), NCBA Bank, Paystack and our card payment provider, when you pay.',
         'A form-to-email service, used to deliver messages and bookings when the main booking system cannot be reached.',
         'Authorities, if the law requires us to share information.',
       ],
@@ -138,7 +138,7 @@ export const TERMS = {
       heading: 'Fees and payment',
       bullets: [
         'The fee for each session is shown when you reach checkout, in Kenyan Shillings (KSh). Payment is due when you book.',
-        'You can pay by M-Pesa, PayPal or card (Visa or Mastercard). PayPal charges in US dollars at the rate shown at checkout, and your bank or PayPal may add its own fees.',
+        'You can pay by M-Pesa or by card (Visa or Mastercard). Your bank or mobile money provider may add its own fees.',
         'For M-Pesa Paybill payments, you must enter the exact business number and account number shown, and then the M-Pesa confirmation code, so we can match your payment.',
         'A five-session package is paid in full when you book. The first session is the time you choose. The other sessions are arranged between you and Anne by email.',
       ],

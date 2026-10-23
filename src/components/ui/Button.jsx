@@ -4,9 +4,9 @@ const base =
   'inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-colors duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50';
 
 const variants = {
-  primary: 'bg-moss-700 text-white hover:bg-moss-800 active:bg-moss-900',
+  primary: 'bg-action text-white hover:bg-action-hover active:bg-action-press',
   secondary: 'border border-moss-700/40 text-moss-800 hover:border-moss-700 hover:bg-moss-100',
-  sun: 'bg-sun-400 text-fig-900 hover:bg-sun-300 active:bg-sun-500',
+  sun: 'bg-sun-400 text-ink hover:bg-sun-hover active:bg-sun-press',
   outlineLight: 'border border-white/35 text-white hover:bg-white/10',
   quiet: 'text-moss-800 hover:bg-moss-100',
 };

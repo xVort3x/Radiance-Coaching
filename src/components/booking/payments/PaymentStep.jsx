@@ -1,23 +1,19 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getPaymentModes } from '../../../config/payments';
-import { ENV } from '../../../config/env';
 import { PACKAGE, SITE } from '../../../config/site';
-import { formatKes, formatUsd, kesToUsd } from '../../../lib/format';
+import { formatKes } from '../../../lib/format';
 import Button from '../../ui/Button';
 import Notice from '../../ui/Notice';
 import CardPanel from './CardPanel';
 import MethodPicker from './MethodPicker';
 import MpesaPanel from './MpesaPanel';
-import PaypalPanel from './PaypalPanel';
 import PaystackPanel from './PaystackPanel';
 
 export default function PaymentStep({ offer, quote, instant, reference, details, onPaid, onPayLater, onTaken }) {
   const modes = useMemo(() => getPaymentModes({ isPackage: quote.isPackage }), [quote.isPackage]);
-  const available = ['mpesa', 'paypal', 'card'].filter((id) => modes[id] !== 'unavailable');
+  const available = ['mpesa', 'card'].filter((id) => modes[id] !== 'unavailable');
   const [method, setMethod] = useState(available[0] ?? null);
-
-  const description = `${offer.name}${quote.isPackage ? `, ${PACKAGE.sessions}-session package` : ''} with ${SITE.coach} (${reference})`;
 
   if (available.length === 0) {
     return (
@@ -43,11 +39,6 @@ export default function PaymentStep({ offer, quote, instant, reference, details,
           </p>
           <p className="font-display text-3xl text-fig-900">
             {formatKes(quote.total)}
-            {method === 'paypal' && (
-              <span className="ml-3 font-sans text-sm text-fig-600">
-                charged as {formatUsd(kesToUsd(quote.total, ENV.kesPerUsd))}
-              </span>
-            )}
           </p>
         </div>
         {quote.isPackage && (
@@ -85,15 +76,6 @@ export default function PaymentStep({ offer, quote, instant, reference, details,
               amountKes={quote.total}
               reference={reference}
               defaultPhone={details.phone}
-              onSuccess={onPaid}
-            />
-          )}
-          {method === 'paypal' && (
-            <PaypalPanel
-              mode={modes.paypal}
-              amountKes={quote.total}
-              reference={reference}
-              description={description}
               onSuccess={onPaid}
             />
           )}

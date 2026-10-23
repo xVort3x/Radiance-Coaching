@@ -18,7 +18,7 @@ const PAYMENT_LABELS = {
   'pay-later': 'Payment details to be arranged by email',
 };
 
-const METHOD_LABELS = { mpesa: 'M-Pesa', paypal: 'PayPal', card: 'Card (Visa or Mastercard)', none: '' };
+const METHOD_LABELS = { mpesa: 'M-Pesa', card: 'Card (Visa or Mastercard)', none: '' };
 
 export function describePayment(payment) {
   const status = PAYMENT_LABELS[payment.status] ?? payment.status;

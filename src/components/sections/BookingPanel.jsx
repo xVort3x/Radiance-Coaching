@@ -35,7 +35,7 @@ export default function BookingPanel() {
   return (
     <section id="book" aria-labelledby="book-title" className="relative z-10 -mt-24 pb-4 sm:-mt-28 lg:-mt-32">
       <Container>
-        <div className="rounded-[2rem] border border-moss-200 bg-white p-6 shadow-[0_40px_80px_-40px_rgba(42,34,51,0.45)] sm:p-10">
+        <div className="rounded-[2rem] border border-moss-200 bg-surface p-6 shadow-[0_40px_80px_-40px_rgba(42,34,51,0.45)] sm:p-10">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 id="book-title" className="text-3xl leading-[1.1] text-fig-900 sm:text-4xl">
@@ -66,7 +66,7 @@ export default function BookingPanel() {
                   <span
                     className={cx(
                       'flex h-11 w-11 items-center justify-center rounded-full',
-                      highlight ? 'bg-sun-400 text-fig-900' : 'bg-moss-100 text-moss-700 group-hover:bg-white',
+                      highlight ? 'bg-sun-400 text-ink' : 'bg-moss-100 text-moss-700 group-hover:bg-surface',
                     )}
                   >
                     <Icon size={22} strokeWidth={1.6} aria-hidden="true" />
@@ -78,7 +78,7 @@ export default function BookingPanel() {
                     <span
                       className={cx(
                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform duration-200 group-hover:translate-x-0.5',
-                        highlight ? 'bg-fig-900 text-white' : 'bg-moss-700 text-white',
+                        highlight ? 'bg-night text-white' : 'bg-action text-white',
                       )}
                     >
                       <ArrowRight size={17} aria-hidden="true" />

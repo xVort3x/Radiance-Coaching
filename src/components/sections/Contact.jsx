@@ -82,7 +82,7 @@ export default function Contact() {
                 aria-describedby={errors.name ? 'contact-name-error' : undefined}
               />
               {errors.name && (
-                <p id="contact-name-error" className="mt-2 text-sm text-[#b4452f]">
+                <p id="contact-name-error" className="mt-2 text-sm text-err-icon">
                   {errors.name}
                 </p>
               )}
@@ -102,7 +102,7 @@ export default function Contact() {
                 aria-describedby={errors.email ? 'contact-email-error' : undefined}
               />
               {errors.email && (
-                <p id="contact-email-error" className="mt-2 text-sm text-[#b4452f]">
+                <p id="contact-email-error" className="mt-2 text-sm text-err-icon">
                   {errors.email}
                 </p>
               )}
@@ -135,7 +135,7 @@ export default function Contact() {
               aria-describedby={errors.message ? 'contact-message-error' : undefined}
             />
             {errors.message && (
-              <p id="contact-message-error" className="mt-2 text-sm text-[#b4452f]">
+              <p id="contact-message-error" className="mt-2 text-sm text-err-icon">
                 {errors.message}
               </p>
             )}
@@ -159,7 +159,7 @@ export default function Contact() {
                 </p>
               )}
               {status === 'failed' && (
-                <p className="flex items-start gap-2 text-[#b4452f]">
+                <p className="flex items-start gap-2 text-err-icon">
                   <CircleAlert size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
                   <span>
                     The message did not send. Please email{' '}

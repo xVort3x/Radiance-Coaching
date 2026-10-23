@@ -62,7 +62,7 @@ export default function Services() {
           </ul>
         </div>
 
-        <div className="on-dark relative isolate mt-16 overflow-hidden rounded-[2rem] bg-moss-700 p-8 text-white sm:p-12">
+        <div className="on-dark relative isolate mt-16 overflow-hidden rounded-[2rem] bg-action p-8 text-white sm:p-12">
           <RingsArt
             className="pointer-events-none absolute -right-24 -top-24 -z-10 h-80 w-80 opacity-40 sm:h-[26rem] sm:w-[26rem]"
             stroke="#F1CB7E"

@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { CreditCard, Smartphone, Wallet } from 'lucide-react';
+import { CreditCard, Smartphone } from 'lucide-react';
 import { PAYMENT_METHODS } from '../../../config/payments';
 import { cx } from '../../../lib/cx';
 
-const ICONS = { mpesa: Smartphone, paypal: Wallet, card: CreditCard };
+const ICONS = { mpesa: Smartphone, card: CreditCard };
 
 const BADGES = {
   demo: 'Preview',
@@ -16,7 +16,7 @@ export default function MethodPicker({ value, onChange, modes }) {
   return (
     <fieldset>
       <legend className="mb-3 text-sm font-medium text-fig-800">Choose how to pay</legend>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {PAYMENT_METHODS.map((method) => {
           const Icon = ICONS[method.id];
           const mode = modes[method.id];
@@ -26,7 +26,7 @@ export default function MethodPicker({ value, onChange, modes }) {
             <label
               key={method.id}
               className={cx(
-                'relative flex cursor-pointer items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 transition-colors duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-moss-700 sm:flex-col sm:items-start sm:gap-2.5',
+                'relative flex cursor-pointer items-center gap-3 rounded-2xl border bg-surface px-4 py-3.5 transition-colors duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-moss-700 sm:flex-col sm:items-start sm:gap-2.5',
                 selected ? 'border-moss-700' : 'border-moss-300 hover:border-moss-500',
                 disabled && 'cursor-not-allowed opacity-55 hover:border-moss-300',
               )}
@@ -50,7 +50,7 @@ export default function MethodPicker({ value, onChange, modes }) {
               <span
                 className={cx(
                   'relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200',
-                  selected ? 'bg-moss-700 text-white' : 'bg-moss-100 text-moss-700',
+                  selected ? 'bg-action text-white' : 'bg-moss-100 text-moss-700',
                 )}
               >
                 <Icon size={20} aria-hidden="true" />

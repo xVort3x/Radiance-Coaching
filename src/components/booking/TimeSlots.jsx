@@ -40,7 +40,7 @@ export default function TimeSlots({ dateKey, value, onChange, now, minutes, busy
       <p className="mt-1 text-sm text-fig-600">Times are in {TIME.label}.</p>
 
       {slots.length === 0 && (
-        <p className="mt-5 rounded-2xl border border-moss-200 bg-white px-4 py-3 text-fig-700" role="status">
+        <p className="mt-5 rounded-2xl border border-moss-200 bg-surface px-4 py-3 text-fig-700" role="status">
           All times on this day have just been taken. Please choose another day.
         </p>
       )}
@@ -65,8 +65,8 @@ export default function TimeSlots({ dateKey, value, onChange, now, minutes, busy
                 className={cx(
                   'w-full whitespace-nowrap rounded-2xl border px-2 py-3 text-center transition-colors duration-150',
                   selected
-                    ? 'border-moss-700 bg-moss-700 text-white'
-                    : 'border-moss-300 bg-white text-fig-900 hover:border-moss-600 hover:bg-moss-100',
+                    ? 'border-moss-700 bg-action text-white'
+                    : 'border-moss-300 bg-surface text-fig-900 hover:border-moss-600 hover:bg-moss-100',
                 )}
               >
                 <span className="block font-medium">{formatTimeEat(slot.instant)}</span>

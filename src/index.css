@@ -8,7 +8,7 @@
   sun   – the radiance: morning gold, used for light, never for body text
   petal – a soft blush for warmth
 */
-@theme {
+@theme static {
   --color-mist-50: #f8faf7;
   --color-mist-100: #f2f5f1;
   --color-mist-200: #e6ece4;
@@ -47,8 +47,135 @@
   --color-petal-500: #c9988a;
   --color-petal-700: #8d5b4e;
 
+  /* Roles that change between light and dark mode (see the dark block below). */
+  --color-surface: #ffffff; /* cards and fields */
+  --color-action: #2f4a3f; /* filled buttons and selected states, with white text */
+  --color-action-hover: #2a4238;
+  --color-action-press: #22372f;
+  --color-night: #2a2233; /* always-dark fill, with white text */
+  --color-ink: #2a2233; /* always-dark text, for use on the gold buttons */
+  --color-sun-hover: #f1cb7e;
+  --color-sun-press: #e9b44c;
+  --color-logo-ground: #2f4a3f;
+  --color-err-bg: #fbeeea;
+  --color-err-border: #e3b3a8;
+  --color-err-text: #7d2a18;
+  --color-err-icon: #b4452f;
+  --color-badge-plate: transparent;
+
+  --hill-back-top: #c9d9ce;
+  --hill-back-bottom: #bdd0c3;
+  --hill-mid-top: #9db9a6;
+  --hill-mid-bottom: #7fa08c;
+  --hill-front-top: #4b7260;
+  --hill-front-bottom: #2f4a3f;
+
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+
+/*
+  Dark mode. The same colour names are redefined, so every component follows without changes:
+  mist = the page and its panels, fig = text, moss = accents and lines.
+  Sections that are dark in both modes carry the `on-dark` class, which puts the original
+  (light mode) values back inside them.
+*/
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-mist-50: #181e21;
+  --color-mist-100: #12171a;
+  --color-mist-200: #1f272a;
+  --color-mist-300: #2c3639;
+
+  --color-fig-900: #eeeaf3;
+  --color-fig-800: #e0dbe8;
+  --color-fig-700: #cbc5d6;
+  --color-fig-600: #b0a9bf;
+  --color-fig-500: #968ea8;
+  --color-fig-300: #5d5470;
+  --color-fig-200: #3a3347;
+
+  --color-moss-800: #b7dcc6;
+  --color-moss-700: #9fd0b6;
+  --color-moss-600: #86bb9f;
+  --color-moss-500: #6fa488;
+  --color-moss-400: #6e917d;
+  --color-moss-300: #587868;
+  --color-moss-200: #2c3b34;
+  --color-moss-100: #1d2a24;
+
+  --color-sun-100: #2c2616;
+  --color-sun-200: #43381b;
+  --color-sun-300: #8a7233;
+  --color-sun-700: #e0b34f;
+
+  --color-petal-100: #2b1f1c;
+  --color-petal-200: #33241f;
+  --color-petal-300: #43302a;
+  --color-petal-700: #e2b3a6;
+
+  --color-surface: #1b2225;
+  --color-action: #3a6b57;
+  --color-action-hover: #447b65;
+  --color-action-press: #32604d;
+  --color-logo-ground: #8fc4a8;
+  --color-err-bg: #3a1f1a;
+  --color-err-border: #7a3b2e;
+  --color-err-text: #f2c4b8;
+  --color-err-icon: #f0937c;
+  --color-badge-plate: #f2f5f1;
+
+  --hill-back-top: #2b3d34;
+  --hill-back-bottom: #22322b;
+  --hill-mid-top: #1e2d26;
+  --hill-mid-bottom: #17231e;
+  --hill-front-top: #13201a;
+  --hill-front-bottom: #0e1713;
+}
+
+:root[data-theme='dark'] .on-dark {
+  --color-mist-50: #f8faf7;
+  --color-mist-100: #f2f5f1;
+  --color-mist-200: #e6ece4;
+  --color-mist-300: #d3ddd0;
+
+  --color-fig-900: #2a2233;
+  --color-fig-800: #3a3045;
+  --color-fig-700: #4b4059;
+  --color-fig-600: #5e5470;
+  --color-fig-500: #766c87;
+  --color-fig-300: #b7afc3;
+  --color-fig-200: #d6d1de;
+
+  --color-moss-800: #2a4238;
+  --color-moss-700: #2f4a3f;
+  --color-moss-600: #3b5c4e;
+  --color-moss-500: #4b7260;
+  --color-moss-400: #6e917d;
+  --color-moss-300: #8fae9a;
+  --color-moss-200: #bdd0c3;
+  --color-moss-100: #dce7df;
+
+  --color-sun-100: #fbefd0;
+  --color-sun-200: #f6dda6;
+  --color-sun-300: #f1cb7e;
+  --color-sun-700: #9b6a12;
+
+  --color-petal-100: #f8eae5;
+  --color-petal-200: #f2ddd6;
+  --color-petal-300: #ebcfc6;
+  --color-petal-700: #8d5b4e;
+
+  --color-surface: #ffffff;
+  --color-action: #2f4a3f;
+  --color-action-hover: #2a4238;
+  --color-action-press: #22372f;
 }
 
 @layer base {
@@ -93,7 +220,7 @@
   }
 
   .on-dark :focus-visible {
-    outline-color: var(--color-sun-300);
+    outline-color: #f1cb7e;
   }
 
   [id] {
@@ -101,8 +228,8 @@
   }
 
   ::selection {
-    background: var(--color-sun-200);
-    color: var(--color-fig-900);
+    background: #f6dda6;
+    color: #2a2233;
   }
 
   input,
@@ -120,7 +247,7 @@
     width: 100%;
     border-radius: 0.875rem;
     border: 1px solid var(--color-moss-300);
-    background-color: #fff;
+    background-color: var(--color-surface);
     padding: 0.8rem 1rem;
     color: var(--color-fig-900);
     transition:
@@ -143,6 +270,6 @@
   }
 
   .field[aria-invalid='true'] {
-    border-color: #b4452f;
+    border-color: var(--color-err-icon);
   }
 }

@@ -9,6 +9,21 @@
       content="Life Coaching, Grief and End-of-Life Coaching, and Betrayal Trauma Coaching with Anne Kibet, PCC Certified Coach. Not sure what you need? Book a free discovery call."
     />
     <meta name="theme-color" content="#2f4a3f" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Sets light or dark before the page paints, so there is no flash. Uses the saved choice,
+      // otherwise the device setting.
+      (function () {
+        var theme = 'light';
+        try {
+          var saved = localStorage.getItem('rc-theme');
+          if (saved === 'dark' || saved === 'light') theme = saved;
+          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+        } catch (e) {}
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#12171a');
+      })();
+    </script>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Radiance Coaching" />
     <meta property="og:title" content="Radiance Coaching | Healing, wholeness and hope" />

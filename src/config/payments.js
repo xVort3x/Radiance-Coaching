@@ -25,7 +25,6 @@ export function getPaymentModes({ isPackage = false } = {}) {
         : demo
           ? 'demo'
           : 'unavailable',
-    paypal: ENV.paypalClientId ? 'live' : demo ? 'demo' : 'unavailable',
     card: paystack
       ? 'paystack'
       : cardUrl || (ENV.cardViaApi && ENV.apiBase)
@@ -38,6 +37,5 @@ export function getPaymentModes({ isPackage = false } = {}) {
 
 export const PAYMENT_METHODS = [
   { id: 'mpesa', name: 'M-Pesa', hint: 'Mobile money' },
-  { id: 'paypal', name: 'PayPal', hint: 'PayPal account' },
   { id: 'card', name: 'Card', hint: 'Visa or Mastercard' },
 ];

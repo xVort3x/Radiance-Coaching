@@ -30,7 +30,7 @@ function Portrait() {
           </>
         )}
       </div>
-      <div className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-moss-700 px-5 py-2.5 text-sm font-medium text-white shadow-[0_12px_30px_-12px_rgba(42,34,51,0.55)]">
+      <div className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-action px-5 py-2.5 text-sm font-medium text-white shadow-[0_12px_30px_-12px_rgba(42,34,51,0.55)]">
         <ShieldCheck size={17} className="text-sun-300" aria-hidden="true" />
         {SITE.credential}
       </div>

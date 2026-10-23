@@ -35,7 +35,7 @@ export default function PaystackPanel({ method, offer, quote, instant, reference
   return (
     <div className="space-y-5">
       {mpesa && <PhonePulse />}
-      <div className="flex gap-3 rounded-2xl bg-white px-4 py-3.5 text-fig-800">
+      <div className="flex gap-3 rounded-2xl bg-surface px-4 py-3.5 text-fig-800">
         <ShieldCheck size={22} className="mt-0.5 shrink-0 text-moss-600" aria-hidden="true" />
         <p>
           {mpesa ? (

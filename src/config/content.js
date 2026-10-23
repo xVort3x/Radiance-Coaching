@@ -56,7 +56,7 @@ export const STEPS = [
   },
   {
     title: 'Choose your service',
-    text: 'Life Coaching, Grief and End-of-Life Coaching, or Betrayal Trauma Coaching. Pick a time, and you will see the price at checkout before you pay with M-Pesa, PayPal or card.',
+    text: 'Life Coaching, Grief and End-of-Life Coaching, or Betrayal Trauma Coaching. Pick a time, and you will see the price at checkout before you pay with M-Pesa or card.',
   },
   {
     title: 'Begin at your pace',
@@ -79,7 +79,7 @@ export const FAQ = [
   },
   {
     q: 'How do I pay?',
-    a: 'The discovery call is free. For a coaching session, you choose your service and a time, and the price is shown at checkout before you pay. You can pay by M-Pesa, PayPal, or Visa or Mastercard. PayPal charges in US dollars at the rate shown at checkout.',
+    a: 'The discovery call is free. For a coaching session, you choose your service and a time, and the price is shown at checkout before you pay. You can pay by M-Pesa, or by Visa or Mastercard.',
   },
   {
     q: 'Can I book several sessions at once?',

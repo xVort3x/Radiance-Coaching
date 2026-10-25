@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BookingProvider } from './booking/BookingContext';
+import { UsdPayProvider } from './usd/UsdPayContext';
+import UsdPayModal from './components/payment/UsdPayModal';
 import BookingModal from './components/booking/BookingModal';
 import Footer from './components/layout/Footer';
 import Header from './components/layout/Header';
@@ -54,6 +56,7 @@ export default function App() {
 
   return (
     <BookingProvider>
+      <UsdPayProvider>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-action focus:px-5 focus:py-3 focus:text-white"
@@ -77,6 +80,8 @@ export default function App() {
       <StickyBook />
       <WhatsAppButton />
       <BookingModal />
+      <UsdPayModal />
+      </UsdPayProvider>
     </BookingProvider>
   );
 }

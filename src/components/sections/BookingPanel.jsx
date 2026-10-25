@@ -2,6 +2,8 @@ import { ArrowRight, Anchor, Compass, Flower2, Sun } from 'lucide-react';
 import { SERVICES } from '../../config/content';
 import { OFFERS } from '../../config/site';
 import { useBooking } from '../../booking/BookingContext';
+import { usdPayAvailable } from '../../config/payments';
+import { useUsdPay } from '../../usd/UsdPayContext';
 import Container from '../ui/Container';
 import { cx } from '../../lib/cx';
 
@@ -11,6 +13,7 @@ const ICONS = { life: Compass, grief: Flower2, betrayal: Anchor };
 // Prices are deliberately not shown here. They appear at checkout.
 export default function BookingPanel() {
   const { openBooking } = useBooking();
+  const { openUsdPay } = useUsdPay();
   const discovery = OFFERS.discovery;
 
   const tiles = [
@@ -92,6 +95,16 @@ export default function BookingPanel() {
           <p className="mt-6 text-[0.95rem] text-fig-600">
             Booking five sessions together? Choose a service, then choose the 5-session package for a
             discounted rate.
+            {usdPayAvailable() && (
+              <>
+                {' '}
+                Paying from abroad?{' '}
+                <button type="button" onClick={openUsdPay} className="font-medium text-moss-800 underline decoration-moss-300 underline-offset-4 hover:decoration-moss-700">
+                  Pay in USD
+                </button>
+                .
+              </>
+            )}
           </p>
         </div>
       </Container>

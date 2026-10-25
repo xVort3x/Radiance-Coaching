@@ -6,7 +6,7 @@
 
 import { SITE } from './site';
 
-export const LEGAL_UPDATED = '23 October 2026';
+export const LEGAL_UPDATED = '25 October 2026';
 
 export const RULES = {
   rescheduleNoticeHours: 24,
@@ -138,7 +138,7 @@ export const TERMS = {
       heading: 'Fees and payment',
       bullets: [
         'The fee for each session is shown when you reach checkout, in Kenyan Shillings (KSh). Payment is due when you book.',
-        'You can pay by M-Pesa or by card (Visa or Mastercard). Your bank or mobile money provider may add its own fees.',
+        'You can pay by M-Pesa or by card (Visa or Mastercard). Where the website offers it, you can also pay an amount you choose in US dollars by card. Your bank or mobile money provider may add its own fees, including for paying in a different currency.',
         'For M-Pesa Paybill payments, you must enter the exact business number and account number shown, and then the M-Pesa confirmation code, so we can match your payment.',
         'A five-session package is paid in full when you book. The first session is the time you choose. The other sessions are arranged between you and Anne by email.',
       ],

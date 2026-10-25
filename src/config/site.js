@@ -85,6 +85,10 @@ export const OFFERS = {
 
 // Booking five sessions together is discounted. The discount applies to each
 // session. Like all prices, it is only shown at checkout.
+// Limits for the "Pay in USD" popup, in US dollars. Keep these the same as USD_MIN and USD_MAX in
+// backend/Code.gs: the helper checks them again before any payment starts.
+export const USD_PAY = { min: 5, max: 5000 };
+
 export const PACKAGE = { sessions: 5, discountPerSessionKes: 250 };
 
 // Opening hours in East Africa Time. 0 = Sunday ... 6 = Saturday, null = closed.

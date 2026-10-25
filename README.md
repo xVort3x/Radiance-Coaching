@@ -10,7 +10,7 @@ Built with React, Tailwind CSS 4, Framer Motion and Lucide React.
 - A one-page site: hero, the three services (Life Coaching, Grief and End-of-Life Coaching, Betrayal Trauma Coaching), a free discovery call for people who are not sure what they need, approach, about Anne, how coaching works, FAQ and contact.
 - An animated booking window with its own calendar and time slots (East Africa Time, with the visitor's local time shown beside each slot).
 - A payment step with animated **M-Pesa** and **Visa / Mastercard** options.
-- A confirmation screen with an "Add to my calendar" file (.ics).
+- A confirmation screen showing the booking details.
 - Keyboard-friendly, screen-reader labelled, respects reduced-motion settings, works on phones.
 
 ## Run it
@@ -102,7 +102,8 @@ Every confirmed booking is added to Anne's own Google Calendar (the account the 
 - To change the reminder, edit `CALENDAR_REMINDER_MINUTES` at the top of `Code.gs` (1440 = one day, 60 = one hour).
 - To switch calendar events off, set `CALENDAR_ENABLED: false`.
 - After pasting an updated `Code.gs`, run `setup` once in the editor and allow the new Calendar permission, then **Deploy > Manage deployments > pencil > New version > Deploy**. `setup` also adds any already-confirmed future bookings to the calendar.
-- Clients are not invited from the calendar. They already receive their own confirmation email with a calendar file attached.
+- To check it works without a real booking, choose **`testCalendar`** in the editor and click **Run**. A test event appears two days ahead with the one-day reminders. Delete it afterwards.
+- Clients are not invited from the calendar. They receive a plain confirmation email with the time and video link, with no attachment.
 
 ### WhatsApp
 
@@ -129,6 +130,18 @@ Paystack takes Visa, Mastercard and M-Pesa on its own secure page. The booking h
 6. In the Paystack dashboard, under **Settings > API Keys & Webhooks**, you may set the **Callback URL** to your website address. The helper also sends this itself on every payment.
 
 Prices are decided by the helper, not the page, so a visitor cannot change what they pay. If Paystack is switched on, the M-Pesa and Card choices both open Paystack; the manual Paybill option and the static card links are not used.
+
+### Pay in USD
+
+A **Pay in USD** link (under the booking cards, in the footer and in the phone menu) opens a popup where a client enters their name, email, an amount in US dollars and what it is for, then pays by card on Paystack. The helper checks the amount against its limits, asks Paystack to charge exactly that in USD, confirms with Paystack that it arrived, emails the client a receipt and emails Anne. Each payment is a row in the **Payments** tab of the bookings sheet.
+
+1. **Paystack needs a USD account first.** In the Paystack dashboard go to **Settings > Accounts** and click **Add USD account**. Paystack asks for a USD bank account at a Kenyan bank, and approves it within about a day. Until then Paystack refuses USD payments and the popup tells the client to email Anne.
+2. Paste the new `Code.gs` into Apps Script and deploy a **New version** (see "Bookings and confirmation emails").
+3. In GitHub add the variable `VITE_PAY_USD` = `true` and run the deploy again.
+
+The limits are US$5 to US$5,000. To change them, change `USD_MIN` and `USD_MAX` in `Code.gs` **and** `USD_PAY` in `src/config/site.js`. To switch the feature off, set `USD_ENABLED: false` in `Code.gs` and remove the `VITE_PAY_USD` variable.
+
+Paystack settles USD into the USD account. Without one, international cards are charged and settled in Kenyan shillings by the client's bank.
 
 ### Visa / Mastercard
 
@@ -157,7 +170,7 @@ Add `?demo=payments` to the page address (or set `VITE_DEMO_PAYMENTS=true`) to c
 backend/        booking helper (Google Apps Script), see the README section above
 src/
   config/       site details, content, payment modes, environment
-  lib/          dates (East Africa Time), validation, calendar file, dialog behaviour
+  lib/          dates (East Africa Time), validation, dialog behaviour
   services/     booking delivery and payment calls
   booking/      booking window state
   components/

@@ -35,6 +35,10 @@ export function getPaymentModes({ isPackage = false } = {}) {
   };
 }
 
+// The "Pay in USD" button shows once it is switched on (VITE_PAY_USD=true) and Paystack is set up.
+// In preview mode it also shows, with a simulated payment.
+export const usdPayAvailable = () => isDemoMode() || Boolean(ENV.payUsd && ENV.paystack && ENV.bookingApi);
+
 export const PAYMENT_METHODS = [
   { id: 'mpesa', name: 'M-Pesa', hint: 'Mobile money' },
   { id: 'card', name: 'Card', hint: 'Visa or Mastercard' },

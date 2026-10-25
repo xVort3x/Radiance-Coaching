@@ -1,10 +1,9 @@
 import { motion } from 'framer-motion';
-import { CalendarPlus, LoaderCircle, Mail, RotateCw } from 'lucide-react';
+import { LoaderCircle, Mail, RotateCw } from 'lucide-react';
 import { SITE, TIME } from '../../config/site';
 import { formatKes } from '../../lib/format';
 import { formatDateEat, formatTimeEat } from '../../lib/dates';
-import { buildIcs, downloadIcs } from '../../lib/ics';
-import { buildBookingText, bookingSubject, calendarLocation, describePayment, mailtoHref } from '../../services/booking';
+import { buildBookingText, bookingSubject, describePayment, mailtoHref } from '../../services/booking';
 import Button from '../ui/Button';
 import CopyButton from '../ui/CopyButton';
 import Notice from '../ui/Notice';
@@ -48,20 +47,6 @@ const headline = (booking, delivery) => {
 
 export default function Confirmation({ booking, delivery, emailed, onPickAnother, onRetry, onClose }) {
   const { ref, offer, quote, instant, details, payment } = booking;
-
-  const addToCalendar = () => {
-    downloadIcs(
-      `radiance-coaching-${ref}.ics`,
-      buildIcs({
-        ref,
-        title: `${offer.name}${quote.isPackage ? ` (session 1 of ${quote.count})` : ''} with ${SITE.coach}`,
-        start: instant,
-        minutes: offer.minutes,
-        description: `Booking reference ${ref}. Your video link is in your confirmation email, or ${SITE.coachFirstName} will send it before the session.`,
-        location: calendarLocation,
-      }),
-    );
-  };
 
   const text = buildBookingText(booking);
   const mailHref = mailtoHref(bookingSubject(booking), text);
@@ -173,11 +158,6 @@ export default function Confirmation({ booking, delivery, emailed, onPickAnother
       )}
 
       <div className="flex flex-wrap gap-3">
-        {delivery !== 'taken' && delivery !== 'rescheduling' && (
-          <Button variant="secondary" onClick={addToCalendar}>
-            <CalendarPlus size={18} aria-hidden="true" /> Add to my calendar
-          </Button>
-        )}
         {delivery === 'failed' && (
           <>
             <Button as="a" variant="secondary" href={mailHref}>

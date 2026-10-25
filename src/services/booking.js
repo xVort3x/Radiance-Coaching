@@ -1,4 +1,4 @@
-import { PACKAGE, SITE, TIME, SESSION_FORMAT } from '../config/site';
+import { PACKAGE, SITE, TIME } from '../config/site';
 import { ENV } from '../config/env';
 import { formatKes } from '../lib/format';
 import { formatDateEat, formatTimeEat, formatLocal, localDiffers } from '../lib/dates';
@@ -155,4 +155,3 @@ export async function submitContact({ name, email, message, website = '' }) {
   });
 }
 
-export const calendarLocation = SESSION_FORMAT;

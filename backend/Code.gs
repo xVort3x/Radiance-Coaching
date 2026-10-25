@@ -5,7 +5,7 @@
  *  1. Keeps every booking in a Google Sheet in Anne's Google Drive.
  *  2. Tells the website which times are already taken, so nobody can double-book.
  *  3. Holds a time for 15 minutes while a client is paying.
- *  4. Emails the client a confirmation (with a calendar invite attached) and emails Anne.
+ *  4. Emails the client a confirmation (no attachments) and emails Anne.
  *  5. Sends the website's contact-form messages to Anne.
  *
  * Setup is in the README ("Bookings and confirmation emails"). The only thing you
@@ -49,6 +49,12 @@ var CONFIG = {
   },
   // Google Calendar: every confirmed booking is added to Anne's own calendar, with a reminder
   // this many minutes before (1440 = one day). Set CALENDAR_ENABLED to false to switch it off.
+  // "Pay in USD": a client enters an amount and pays on Paystack in US dollars. This needs a USD
+  // account set up in your Paystack dashboard (README, "Pay in USD"). Limits are in US dollars and
+  // should match src/config/site.js.
+  USD_ENABLED: true,
+  USD_MIN: 5,
+  USD_MAX: 5000,
   CALENDAR_ENABLED: true,
   CALENDAR_REMINDER_MINUTES: 1440,
   PACKAGE_SESSIONS: 5,
@@ -69,6 +75,12 @@ var BOOKING_HEADERS = [
   'Name', 'Email', 'Phone', 'Notes from client', 'Payment', 'Payment code',
   'Start (ms)', 'End (ms)', 'Hold until (ms)', 'Minutes',
   'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference', 'Calendar event',
+];
+// The Payments tab (USD payments): one row per payment.
+var PCOL = { ref: 0, status: 1, created: 2, name: 3, email: 4, amount: 5, note: 6, payRef: 7, channel: 8, receipt: 9, paidAt: 10, createdMs: 11 };
+var PAYMENT_HEADERS = [
+  'Reference', 'Status', 'Created', 'Name', 'Email', 'Amount (USD)', 'What it is for', 'Paystack reference',
+  'Paid by', 'Receipt', 'Paid on', 'Created (ms)',
 ];
 var MINUTE_MS = 60000;
 var HOUR_MS = 3600000;
@@ -95,6 +107,8 @@ function doPost(e) {
     if (data.action === 'contact') return json_(contact_(data));
     if (data.action === 'payinit') return json_(payInit_(data));
     if (data.action === 'payverify') return json_(payVerify_(data));
+    if (data.action === 'usdinit') return json_(usdInit_(data));
+    if (data.action === 'usdverify') return json_(usdVerify_(data));
     return json_({ ok: false, code: 'bad_request', message: 'Unknown action.' });
   } catch (err) {
     return json_({ ok: false, code: 'error', message: String(err && err.message ? err.message : err) });
@@ -168,6 +182,11 @@ function getSpreadsheet_() {
     blocked.getRange(1, 1, 1, 3).setValues([['Start (date and time)', 'End (date and time)', 'Note']]).setFontWeight('bold');
     blocked.getRange(2, 1, 1, 3).setValues([['Type a start date and time here', 'Type an end date and time here', 'Delete this row. Add each day off or holiday on its own row.']]);
     blocked.setFrozenRows(1);
+  }
+  if (!ss.getSheetByName('Payments')) {
+    var payments = ss.insertSheet('Payments');
+    payments.getRange(1, 1, 1, PAYMENT_HEADERS.length).setValues([PAYMENT_HEADERS]).setFontWeight('bold');
+    payments.setFrozenRows(1);
   }
   spreadsheetCache_ = ss;
   return ss;
@@ -517,6 +536,25 @@ function syncCalendar_() {
   });
 }
 
+// Run this once from the editor to check the calendar link works. It adds a short test event
+// two days from now to the calendar of the account the helper runs as, with the same
+// one-day reminders as real bookings, and emails Anne to say where to look. Delete the event afterwards.
+function testCalendar() {
+  var calendar = CalendarApp.getDefaultCalendar();
+  var start = new Date(Date.now() + 2 * 24 * HOUR_MS);
+  var event = calendar.createEvent('TEST: Radiance Coaching booking (delete me)', start, new Date(start.getTime() + 30 * MINUTE_MS), {
+    description: 'This test event shows the calendar link is working. Real bookings look like this, with the client details and video link.',
+    location: hasMeetingLink_() ? CONFIG.MEETING_LINK : 'Online',
+  });
+  event.removeAllReminders();
+  event.addPopupReminder(CONFIG.CALENDAR_REMINDER_MINUTES);
+  event.addEmailReminder(CONFIG.CALENDAR_REMINDER_MINUTES);
+  var message = 'A test event was added to the Google Calendar of ' + calendar.getName() + ' for ' +
+    whenText_(start.getTime()) + ', with a reminder 1 day before. You can delete it.';
+  Logger.log(message);
+  MailApp.sendEmail({ to: CONFIG.COACH_EMAIL, subject: CONFIG.BUSINESS_NAME + ': calendar test', body: message });
+}
+
 function calendarTitle_(b) {
   var kind = b.offerId === 'discovery' || /discovery/i.test(b.service) ? 'Discovery call' : b.service || 'Coaching session';
   return kind + ': ' + b.name + (b.isPackage ? ' (session 1 of ' + b.sessions + ')' : '');
@@ -586,25 +624,6 @@ function expectText_(b) {
   return 'Your session is ' + b.slot.minutes + ' minutes, one-to-one, on video. There is nothing to prepare. Come as you are, and share only what feels right. Anne listens first and goes at your pace.';
 }
 
-function icsFor_(b) {
-  var stamp = function (ms) {
-    return new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  };
-  var where = hasMeetingLink_() ? CONFIG.MEETING_LINK : 'Video call';
-  return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Radiance Coaching//Booking//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    'UID:' + b.ref + '@radiancecoaching',
-    'DTSTAMP:' + stamp(Date.now()),
-    'DTSTART:' + stamp(b.slot.startMs),
-    'DTEND:' + stamp(b.slot.endMs),
-    'SUMMARY:' + b.service + ' with ' + CONFIG.COACH_NAME,
-    'DESCRIPTION:Booking reference ' + b.ref + '. ' + (hasMeetingLink_() ? 'Join: ' + CONFIG.MEETING_LINK : ''),
-    'LOCATION:' + where,
-    'END:VEVENT', 'END:VCALENDAR',
-  ].join('\r\n');
-}
-
 function sendClientEmail_(b) {
   var first = b.name.split(/\s+/)[0];
   var when = whenText_(b.slot.startMs);
@@ -668,7 +687,6 @@ function sendClientEmail_(b) {
     subject: 'Your session is booked: ' + when,
     body: text,
     htmlBody: html,
-    attachments: [Utilities.newBlob(icsFor_(b), 'text/calendar', 'radiance-coaching-' + b.ref + '.ics')],
   });
 }
 
@@ -927,10 +945,237 @@ function settlePayment_(payRef) {
   return { state: 'confirmed', info: infoFor_(row), emailed: emailed };
 }
 
+
+// ───────────────────────────── Pay in USD ─────────────────────────────
+
+function paymentsSheet_() {
+  return getSpreadsheet_().getSheetByName('Payments');
+}
+
+function readPayments_() {
+  var rows = paymentsSheet_().getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < rows.length; i += 1) {
+    var r = rows[i];
+    if (!r[PCOL.ref]) continue;
+    var amount = Number(r[PCOL.amount]) || 0;
+    out.push({
+      row: i + 1,
+      ref: String(r[PCOL.ref]),
+      status: String(r[PCOL.status]).toLowerCase(),
+      name: String(r[PCOL.name] || ''),
+      email: String(r[PCOL.email] || ''),
+      amount: amount,
+      cents: Math.round(amount * 100),
+      note: String(r[PCOL.note] || ''),
+      payRef: String(r[PCOL.payRef] || ''),
+      createdMs: Number(r[PCOL.createdMs]) || 0,
+    });
+  }
+  return out;
+}
+
+function updatePayment_(rowNumber, fields) {
+  var sheet = paymentsSheet_();
+  Object.keys(fields).forEach(function (key) {
+    sheet.getRange(rowNumber, PCOL[key] + 1).setValue(fields[key]);
+  });
+}
+
+function usdText_(amount) {
+  return 'US$' + Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function usdInfoFor_(p) {
+  return { ref: p.ref, name: p.name, email: p.email, amount: p.amount, note: p.note };
+}
+
+// Starts a US dollar payment for an amount the client chose. The amount is checked here against
+// the limits in CONFIG, never trusted from the website.
+function usdInit_(data) {
+  var nowMs = Date.now();
+  if (!CONFIG.USD_ENABLED) return { ok: false, code: 'unavailable', message: 'Payments in US dollars are not available right now.' };
+  var name = cleanLine_(data.name, 80);
+  var email = cleanLine_(data.email, 120).toLowerCase();
+  var note = cleanLine_(data.note, 200);
+  var amount = Math.round(Number(data.amount) * 100) / 100;
+  if (name.length < 2 || !validEmail_(email) || !isFinite(amount)) {
+    return { ok: false, code: 'bad_request', message: 'Please check your name, email and amount.' };
+  }
+  if (amount < CONFIG.USD_MIN || amount > CONFIG.USD_MAX) {
+    return { ok: false, code: 'amount', message: 'Please enter an amount between ' + usdText_(CONFIG.USD_MIN) + ' and ' + usdText_(CONFIG.USD_MAX) + '.' };
+  }
+  if (!paystackKey_()) return { ok: false, code: 'not_configured', message: 'Online payments are not switched on yet.' };
+
+  var cache = CacheService.getScriptCache();
+  var key = 'usd_' + email.slice(0, 80);
+  if (cache.get(key)) return { ok: false, code: 'busy', message: 'Please wait a few seconds and try again.' };
+  cache.put(key, '1', 10);
+
+  var back = String(data.returnUrl || '').split('#')[0].split('?')[0];
+  var returnUrl = back.length < 200 && /^\S+$/.test(back) && CONFIG.ALLOWED_RETURN.test(back) ? back : CONFIG.SITE_URL + '/';
+
+  var ref = 'RU-' + (nowMs.toString(36) + Math.random().toString(36).slice(2, 6)).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(-9);
+  var payRef = ref + '-1';
+  var cents = Math.round(amount * 100);
+
+  var made = withLock_(function () {
+    var waiting = readPayments_().filter(function (p) {
+      return p.status === 'awaiting-payment' && p.email.toLowerCase() === email && nowMs - p.createdMs < HOUR_MS;
+    });
+    if (waiting.length >= 5) return { ok: false, code: 'busy', message: 'Too many unfinished payments for this email. Please try again later.' };
+    paymentsSheet_().appendRow([
+      ref, 'awaiting-payment', Utilities.formatDate(new Date(nowMs), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
+      name, email, amount, note, payRef, '', '', '', nowMs,
+    ]);
+    return { ok: true, row: paymentsSheet_().getLastRow() };
+  });
+  if (!made.ok) return made;
+
+  var res = paystackCall_('post', '/transaction/initialize', {
+    email: email,
+    amount: String(cents),
+    currency: 'USD',
+    reference: payRef,
+    callback_url: returnUrl,
+    metadata: JSON.stringify({ payment: ref, client: name, note: note }),
+  });
+  var checkout = res.body && res.body.data && res.body.data.authorization_url;
+  if (res.code !== 200 || !checkout) {
+    var why = cleanLine_(res.body && res.body.message, 120);
+    updatePayment_(made.row, { status: 'init-failed', channel: 'Paystack did not start: ' + why });
+    // Paystack refuses USD until a USD account has been added and approved in the dashboard.
+    if (/currenc/i.test(why)) {
+      return { ok: false, code: 'currency', message: 'Payments in US dollars are not switched on yet. Please email ' + CONFIG.COACH_NAME.split(' ')[0] + ' and she will help.' };
+    }
+    return { ok: false, code: 'gateway', message: 'The payment page could not be opened. Please try again.' };
+  }
+  return { ok: true, url: checkout };
+}
+
+function usdVerify_(data) {
+  var result = settleUsd_(cleanLine_(data.payRef, 40));
+  return { ok: true, state: result.state, info: result.info || null, emailed: Boolean(result.emailed) };
+}
+
+// Checks one USD payment with Paystack and, if the money has arrived, records it and sends the emails.
+// States: paid, pending, failed, problem, not_found, error.
+function settleUsd_(payRef) {
+  if (!/^RU-[A-Za-z0-9]+-\d+$/.test(payRef)) return { state: 'not_found' };
+  var row = readPayments_().filter(function (p) { return p.payRef === payRef; })[0];
+  if (!row) return { state: 'not_found' };
+  if (row.status === 'paid') return { state: 'paid', info: usdInfoFor_(row) };
+  if (row.status === 'payment-problem' || row.status === 'init-failed') return { state: 'problem' };
+  if (!paystackKey_()) return { state: 'error' };
+
+  var res = paystackCall_('get', '/transaction/verify/' + encodeURIComponent(payRef));
+  var tx = res.body && res.body.data;
+  if (res.code !== 200 || !tx) return { state: 'pending' };
+  var status = String(tx.status);
+  if (status === 'failed' || status === 'reversed') return { state: 'failed' };
+  if (status !== 'success') return { state: 'pending' };
+
+  // The money arrived. It must be exactly the amount asked for, in US dollars.
+  if (Number(tx.amount) !== row.cents || String(tx.currency) !== 'USD') {
+    updatePayment_(row.row, { status: 'payment-problem', channel: 'Paystack amount or currency did not match. Check Paystack.' });
+    safely_(function () {
+      MailApp.sendEmail({
+        to: CONFIG.COACH_EMAIL,
+        name: CONFIG.BUSINESS_NAME + ' website',
+        subject: 'ACTION NEEDED: USD payment problem ' + row.ref,
+        body: 'A Paystack payment (' + payRef + ') from ' + row.name + ' (' + row.email + ') did not match the expected ' +
+          usdText_(row.amount) + '. Please check it in your Paystack dashboard.',
+      });
+    });
+    return { state: 'problem' };
+  }
+
+  var channel = tx.channel === 'mobile_money' ? 'M-Pesa' : tx.channel === 'card' ? 'Card' : 'Paystack';
+  var receipt = cleanLine_(tx.receipt_number || tx.id || payRef, 40);
+  var first = withLock_(function () {
+    var fresh = readPayments_().filter(function (p) { return p.payRef === payRef; })[0];
+    if (fresh.status === 'paid') return false;
+    updatePayment_(fresh.row, {
+      status: 'paid', channel: channel, receipt: receipt,
+      paidAt: Utilities.formatDate(new Date(Date.now()), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
+    });
+    return true;
+  });
+  if (!first) return { state: 'paid', info: usdInfoFor_(row) };
+
+  safely_(function () { sendUsdCoachEmail_(row, channel, receipt); });
+  var emailed = safely_(function () { sendUsdClientEmail_(row); });
+  return { state: 'paid', info: usdInfoFor_(row), emailed: emailed };
+}
+
+function sendUsdClientEmail_(p) {
+  var first = p.name.split(/\s+/)[0];
+  var text = [
+    'Hi ' + first + ',', '',
+    'Thank you. ' + CONFIG.BUSINESS_NAME + ' has received your payment of ' + usdText_(p.amount) + '.', '',
+    'Reference: ' + p.ref,
+    p.note ? 'For: ' + p.note : '',
+    '', 'If anything looks wrong, reply to this email and we will help.', '',
+    'Warmly,', CONFIG.COACH_NAME, CONFIG.BUSINESS_NAME, CONFIG.SITE_URL,
+  ].filter(function (line, i, all) { return line !== '' || all[i - 1] !== ''; }).join('\n');
+  var html =
+    '<div style="font-family:Arial,Helvetica,sans-serif;color:#2A2233;line-height:1.55;max-width:560px">' +
+    '<p>Hi ' + esc_(first) + ',</p>' +
+    '<p>Thank you. ' + esc_(CONFIG.BUSINESS_NAME) + ' has received your payment of <strong>' + esc_(usdText_(p.amount)) + '</strong>.</p>' +
+    '<table style="border-collapse:collapse;margin:16px 0;width:100%">' +
+    row_('Reference', p.ref) + (p.note ? row_('For', p.note) : '') + row_('Amount', usdText_(p.amount)) +
+    '</table>' +
+    '<p>If anything looks wrong, reply to this email and we will help.</p>' +
+    '<p>Warmly,<br>' + esc_(CONFIG.COACH_NAME) + '<br>' + esc_(CONFIG.BUSINESS_NAME) + '<br>' +
+    '<a href="' + esc_(CONFIG.SITE_URL) + '">' + esc_(CONFIG.SITE_URL) + '</a></p></div>';
+  MailApp.sendEmail({
+    to: p.email,
+    replyTo: CONFIG.COACH_EMAIL,
+    name: CONFIG.COACH_NAME + ' (' + CONFIG.BUSINESS_NAME + ')',
+    subject: 'Payment received: ' + usdText_(p.amount),
+    body: text,
+    htmlBody: html,
+  });
+}
+
+function sendUsdCoachEmail_(p, channel, receipt) {
+  MailApp.sendEmail({
+    to: CONFIG.COACH_EMAIL,
+    replyTo: p.email,
+    name: CONFIG.BUSINESS_NAME + ' website',
+    subject: 'USD payment received: ' + usdText_(p.amount) + ' from ' + p.name,
+    body: [
+      'A payment of ' + usdText_(p.amount) + ' was received through the website.', '',
+      'Reference: ' + p.ref,
+      'Name: ' + p.name,
+      'Email: ' + p.email,
+      'For: ' + (p.note || 'Not given'),
+      'Paid by: ' + channel + ' (Paystack)',
+      'Receipt: ' + receipt, '',
+      '(Reply to this email to write to them.)',
+    ].join('\n'),
+  });
+}
+
+// Part of the 5-minute check: confirms USD payments the client never came back for,
+// and closes ones that were never paid.
+function reconcileUsd_() {
+  var nowMs = Date.now();
+  readPayments_().forEach(function (p) {
+    if (p.status !== 'awaiting-payment' || !p.payRef) return;
+    if (nowMs - p.createdMs > 6 * HOUR_MS) {
+      updatePayment_(p.row, { status: 'unpaid' });
+      return;
+    }
+    settleUsd_(p.payRef);
+  });
+}
+
 // Runs every few minutes (see enableAutoChecks). Confirms clients who paid but closed the page.
 function reconcilePayments() {
   safely_(syncCalendar_);
   if (!paystackKey_()) return;
+  safely_(reconcileUsd_);
   var nowMs = Date.now();
   readBookings_().forEach(function (b) {
     var waiting = b.payRef && (b.status === 'awaiting-payment' || b.status === 'released');

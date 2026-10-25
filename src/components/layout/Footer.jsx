@@ -1,10 +1,13 @@
 import { Mail } from 'lucide-react';
 import { WhatsAppLink } from '../ui/WhatsAppButton';
 import { NAV, SITE } from '../../config/site';
+import { usdPayAvailable } from '../../config/payments';
+import { useUsdPay } from '../../usd/UsdPayContext';
 import Logo from '../art/Logo';
 import Container from '../ui/Container';
 
 export default function Footer() {
+  const { openUsdPay } = useUsdPay();
   return (
     <footer className="on-dark bg-fig-950 text-fig-200">
       <Container className="grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -28,6 +31,13 @@ export default function Footer() {
                 </a>
               </li>
             ))}
+            {usdPayAvailable() && (
+              <li>
+                <button type="button" onClick={openUsdPay} className="text-[0.95rem] text-fig-200 hover:text-sun-300">
+                  Pay in USD
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
 

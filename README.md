@@ -9,7 +9,7 @@ Built with React, Tailwind CSS 4, Framer Motion and Lucide React.
 
 - A one-page site: hero, the three services (Life Coaching, Grief and End-of-Life Coaching, Betrayal Trauma Coaching), a free discovery call for people who are not sure what they need, approach, about Anne, how coaching works, FAQ and contact.
 - An animated booking window with its own calendar and time slots (East Africa Time, with the visitor's local time shown beside each slot).
-- A payment step with animated **M-Pesa** and **Visa / Mastercard** options.
+- A payment step with animated **M-Pesa**, **Card** and **US dollars** options.
 - A confirmation screen showing the booking details.
 - Keyboard-friendly, screen-reader labelled, respects reduced-motion settings, works on phones.
 
@@ -120,7 +120,7 @@ Pick one:
 
 ### Card and M-Pesa with Paystack (recommended)
 
-Paystack takes Visa, Mastercard and M-Pesa on its own secure page. The booking helper creates the payment, then asks Paystack whether the right amount arrived before it confirms the booking, so nobody can fake a payment. It needs the booking helper (above) to be set up first.
+Paystack takes cards and M-Pesa on its own secure page. The booking helper creates the payment, then asks Paystack whether the right amount arrived before it confirms the booking, so nobody can fake a payment. It needs the booking helper (above) to be set up first.
 
 1. In your Paystack dashboard open **Settings > API Keys & Webhooks** and copy the **Secret key**. Start with the **test** key (`sk_test_...`) and switch to the live key (`sk_live_...`) when you are ready for real money. Never put the secret key on GitHub or in the website.
 2. In the Apps Script project open **Project settings > Script properties > Add script property**. Name: `PAYSTACK_SECRET_KEY`. Value: the key.
@@ -131,19 +131,21 @@ Paystack takes Visa, Mastercard and M-Pesa on its own secure page. The booking h
 
 Prices are decided by the helper, not the page, so a visitor cannot change what they pay. If Paystack is switched on, the M-Pesa and Card choices both open Paystack; the manual Paybill option and the static card links are not used.
 
-### Pay in USD
+### Pay in US dollars
 
-A **Pay in USD** link (under the booking cards, in the footer and in the phone menu) opens a popup where a client enters their name, email, an amount in US dollars and what it is for, then pays by card on Paystack. The helper checks the amount against its limits, asks Paystack to charge exactly that in USD, confirms with Paystack that it arrived, emails the client a receipt and emails Anne. Each payment is a row in the **Payments** tab of the bookings sheet.
+Checkout has a third choice next to **M-Pesa** and **Card**: **US dollars**. When the client chooses it and clicks **Pay in US dollars**, a small window opens on top of the booking. It asks for the **amount** (anything from US$1 to US$5,000, starting at the usual price), their name and their email (the receipt goes there). They click **Confirm and pay** and pay by card on Paystack. Their time is held while they pay, and the booking is confirmed as soon as Paystack says the money arrived.
 
-1. **Paystack needs a USD account first.** In the Paystack dashboard go to **Settings > Accounts** and click **Add USD account**. Paystack asks for a USD bank account at a Kenyan bank, and approves it within about a day. Until then Paystack refuses USD payments and the popup tells the client to email Anne.
-2. Paste the new `Code.gs` into Apps Script and deploy a **New version** (see "Bookings and confirmation emails").
-3. In GitHub add the variable `VITE_PAY_USD` = `true` and run the deploy again.
+The usual price is the shilling price divided by the rate, rounded up to the next cent. At 130, a KSh 5,000 session is US$38.47 and the 5-session package (KSh 23,750) is US$182.70. **The client can type any amount in the allowed range, and the booking is confirmed whatever they pay.** Anne's email shows what they chose next to the usual price, and adds a line saying "this is LESS than the usual price" when it is lower, so she can follow up. The helper checks the limits itself, and asks Paystack to confirm that exactly the chosen number of cents arrived.
 
-The limits are US$5 to US$5,000. To change them, change `USD_MIN` and `USD_MAX` in `Code.gs` **and** `USD_PAY` in `src/config/site.js`. To switch the feature off, set `USD_ENABLED: false` in `Code.gs` and remove the `VITE_PAY_USD` variable.
+1. **Paystack needs a USD account first.** In the Paystack dashboard go to **Settings > Accounts** and click **Add USD account**. Paystack asks for a USD bank account at a Kenyan bank and approves it within about a day. Until then Paystack refuses USD payments, and the window tells the client to pay in shillings or email Anne.
+2. Paste the new `Code.gs` into Apps Script, set `MEETING_LINK` again, run `setup`, and deploy a **New version** (see "Bookings and confirmation emails").
+3. In GitHub add the variable `VITE_PAY_USD` = `true` and run the deploy again. While it is not `true`, the US dollars choice is hidden.
 
-Paystack settles USD into the USD account. Without one, international cards are charged and settled in Kenyan shillings by the client's bank.
+**Limits and rate.** The smallest and largest amounts are written in two places that must match: `USD_MIN` and `USD_MAX` in `Code.gs`, and `USD_LIMITS` in `src/config/site.js`. The rate is `KES_PER_USD` in `Code.gs` and `USD_RATE` in `src/config/site.js`. It only sets the starting amount and the "usual price" in Anne's email, so check it now and then.
 
-### Visa / Mastercard
+Paystack settles USD into the USD account. Without one, international cards are charged and settled in Kenyan shillings by the client's bank. In your bookings sheet the **Payment** column says "Paid online by card (Paystack, US$38.47)" and the **Charged (US cents)** column holds 3847.
+
+### Card payment links
 
 Card details are never typed into this site. Sign up with a provider that supports Kenya (for example Pesapal, Flutterwave or DPO) and either:
 
@@ -155,6 +157,29 @@ The visitor pays on the provider's page and comes back to confirm. Anne confirms
 ### Previewing payments on a live site
 
 Add `?demo=payments` to the page address (or set `VITE_DEMO_PAYMENTS=true`) to click through the simulated payment flow. Preview mode shows a clear notice, never moves money and never sends a booking to Anne. Leave it off on the public site so no visitor believes they have paid when they have not.
+
+## Your own domain and HTTPS
+
+The padlock (HTTPS) on `radiancecoaching.co.ke` is a certificate that GitHub creates by itself once your domain's DNS records are right. The website's code cannot create it. If visitors see "Your connection is not private", or **Settings > Pages > Enforce HTTPS** is greyed out, the DNS records are not right yet. To fix it:
+
+1. In **GitHub > your repository > Settings > Pages**, type `radiancecoaching.co.ke` under **Custom domain** and click **Save**.
+2. At your domain company (MyHost Africa) the DNS records for the main domain must be exactly these four **A** records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`. Add one **CNAME** record, `www`, pointing to `YOURGITHUBUSERNAME.github.io`.
+3. **Delete every other A or AAAA record** for the main domain, such as the company's own hosting or parking address. One leftover record is enough to stop the certificate. If there is a CAA record, delete it or make sure it allows `letsencrypt.org`.
+4. Wait for GitHub's message "DNS check successful" (it can take a few hours, sometimes up to a day), then tick **Enforce HTTPS**. The certificate follows within minutes to a few hours.
+5. Test in a private window at `https://radiancecoaching.co.ke`.
+
+You can see what the world sees at dnschecker.org: enter the domain, choose **A**, and you should see only the four GitHub addresses.
+
+## Showing up on Google
+
+Google shows a title, a short description and a small icon for your site, and it only updates them when it next visits. To refresh them faster:
+
+1. Go to search.google.com/search-console and add your site as a **URL prefix** property, `https://radiancecoaching.co.ke/`. Google asks you to prove it is yours. The easiest way is the **HTML tag** option: paste the tag it gives you into `index.html` just under the line `<meta name="robots" ...>`, then deploy.
+2. In Search Console open **Sitemaps** and add `sitemap.xml`.
+3. Open **URL inspection**, paste `https://radiancecoaching.co.ke/` and click **Request indexing**.
+4. To clear an old description, use Google's **Refresh Outdated Content** tool (search for it by that name), enter your address and submit it.
+
+Updates usually appear within a few days, and can take a few weeks. Fix the HTTPS certificate first (see "Your own domain and HTTPS"), because Google prefers secure addresses. The title and description come from `<title>` and `<meta name="description">` in `index.html`.
 
 ## Things to know
 

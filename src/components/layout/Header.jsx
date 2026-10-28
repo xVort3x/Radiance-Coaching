@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarCheck, Menu, X } from 'lucide-react';
 import { NAV } from '../../config/site';
-import { usdPayAvailable } from '../../config/payments';
-import { useUsdPay } from '../../usd/UsdPayContext';
 import { useBooking } from '../../booking/BookingContext';
 import Logo from '../art/Logo';
 import Button from '../ui/Button';
@@ -13,8 +11,6 @@ import { cx } from '../../lib/cx';
 
 export default function Header() {
   const { openBooking } = useBooking();
-  const { openUsdPay } = useUsdPay();
-  const showUsd = usdPayAvailable();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -31,11 +27,6 @@ export default function Header() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [menuOpen]);
-
-  const payUsd = () => {
-    setMenuOpen(false);
-    openUsdPay();
-  };
 
   const book = () => {
     setMenuOpen(false);
@@ -109,15 +100,6 @@ export default function Header() {
                   {item.label}
                 </a>
               ))}
-              {showUsd && (
-                <button
-                  type="button"
-                  onClick={payUsd}
-                  className="border-b border-moss-200 py-3.5 text-left font-display text-2xl text-fig-900"
-                >
-                  Pay in USD
-                </button>
-              )}
               <Button className="mt-5 w-full" size="lg" variant="sun" onClick={book}>
                 <CalendarCheck size={19} aria-hidden="true" />
                 Book now

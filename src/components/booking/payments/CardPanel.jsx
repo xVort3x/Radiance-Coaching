@@ -60,7 +60,7 @@ function HostedCheckout({ amountKes, isPackage, reference, details, onSuccess })
       <div className="flex gap-3 rounded-2xl bg-surface px-4 py-3.5 text-fig-800">
         <ShieldCheck size={22} className="mt-0.5 shrink-0 text-moss-600" aria-hidden="true" />
         <p>
-          You will pay {formatKes(amountKes)} with Visa or Mastercard on a secure page run by our payment
+          You will pay {formatKes(amountKes)} with your card on a secure page run by our payment
           provider. Your card details are never entered on this website.
         </p>
       </div>

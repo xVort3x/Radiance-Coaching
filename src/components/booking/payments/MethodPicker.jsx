@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { CreditCard, Smartphone } from 'lucide-react';
+import { CreditCard, DollarSign, Smartphone } from 'lucide-react';
 import { PAYMENT_METHODS } from '../../../config/payments';
 import { cx } from '../../../lib/cx';
 
-const ICONS = { mpesa: Smartphone, card: CreditCard };
+const ICONS = { mpesa: Smartphone, card: CreditCard, usd: DollarSign };
 
 const BADGES = {
   demo: 'Preview',
@@ -13,11 +13,13 @@ const BADGES = {
 };
 
 export default function MethodPicker({ value, onChange, modes }) {
+  // M-Pesa and Card always show (greyed out if not set up). US dollars only shows when it is on.
+  const methods = PAYMENT_METHODS.filter((method) => method.id !== 'usd' || modes.usd !== 'unavailable');
   return (
     <fieldset>
       <legend className="mb-3 text-sm font-medium text-fig-800">Choose how to pay</legend>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {PAYMENT_METHODS.map((method) => {
+      <div className={cx('grid gap-3', methods.length > 2 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
+        {methods.map((method) => {
           const Icon = ICONS[method.id];
           const mode = modes[method.id];
           const disabled = mode === 'unavailable';

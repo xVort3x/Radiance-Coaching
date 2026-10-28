@@ -32,14 +32,14 @@ export function getPaymentModes({ isPackage = false } = {}) {
         : demo
           ? 'demo'
           : 'unavailable',
+    // Card payment in US dollars. It only exists through Paystack, and only once it is switched on
+    // (VITE_PAY_USD=true), which should wait until Paystack has approved a USD account.
+    usd: paystack && ENV.payUsd ? 'paystack' : demo ? 'demo' : 'unavailable',
   };
 }
 
-// The "Pay in USD" button shows once it is switched on (VITE_PAY_USD=true) and Paystack is set up.
-// In preview mode it also shows, with a simulated payment.
-export const usdPayAvailable = () => isDemoMode() || Boolean(ENV.payUsd && ENV.paystack && ENV.bookingApi);
-
 export const PAYMENT_METHODS = [
   { id: 'mpesa', name: 'M-Pesa', hint: 'Mobile money' },
-  { id: 'card', name: 'Card', hint: 'Visa or Mastercard' },
+  { id: 'card', name: 'Card', hint: 'Debit or credit card' },
+  { id: 'usd', name: 'US dollars', hint: 'Pay by card in USD' },
 ];

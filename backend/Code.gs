@@ -49,14 +49,17 @@ var CONFIG = {
   },
   // Google Calendar: every confirmed booking is added to Anne's own calendar, with a reminder
   // this many minutes before (1440 = one day). Set CALENDAR_ENABLED to false to switch it off.
-  // "Pay in USD": a client enters an amount and pays on Paystack in US dollars. This needs a USD
-  // account set up in your Paystack dashboard (README, "Pay in USD"). Limits are in US dollars and
-  // should match src/config/site.js.
-  USD_ENABLED: true,
-  USD_MIN: 5,
-  USD_MAX: 5000,
   CALENDAR_ENABLED: true,
   CALENDAR_REMINDER_MINUTES: 1440,
+  // "US dollars" at checkout: a client can pay for a booking in US dollars on Paystack, and chooses
+  // the amount themselves between USD_MIN and USD_MAX (keep these the same as USD_LIMITS in
+  // src/config/site.js). KES_PER_USD only sets the "usual price" shown to them as a starting
+  // amount and in Anne's emails: usual price = price in shillings / KES_PER_USD, rounded up to the cent.
+  // This needs a USD account set up in your Paystack dashboard (README, "Pay in US dollars").
+  USD_ENABLED: true,
+  USD_MIN: 1,
+  USD_MAX: 5000,
+  KES_PER_USD: 130,
   PACKAGE_SESSIONS: 5,
   PACKAGE_DISCOUNT_PER_SESSION: 250,
   // How long a time is kept for someone who has been sent to Paystack to pay.
@@ -68,19 +71,13 @@ var CONFIG = {
 var COL = {
   ref: 0, status: 1, created: 2, when: 3, service: 4, pkg: 5, total: 6, name: 7, email: 8,
   phone: 9, notes: 10, payment: 11, receipt: 12, start: 13, end: 14, holdUntil: 15, minutes: 16,
-  offerId: 17, isPackage: 18, sessions: 19, each: 20, localTime: 21, payRef: 22, eventId: 23,
+  offerId: 17, isPackage: 18, sessions: 19, each: 20, localTime: 21, payRef: 22, eventId: 23, usdCents: 24,
 };
 var BOOKING_HEADERS = [
   'Reference', 'Status', 'Booked on', 'Session (East Africa Time)', 'Service', 'Package', 'Total (KSh)',
   'Name', 'Email', 'Phone', 'Notes from client', 'Payment', 'Payment code',
   'Start (ms)', 'End (ms)', 'Hold until (ms)', 'Minutes',
-  'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference', 'Calendar event',
-];
-// The Payments tab (USD payments): one row per payment.
-var PCOL = { ref: 0, status: 1, created: 2, name: 3, email: 4, amount: 5, note: 6, payRef: 7, channel: 8, receipt: 9, paidAt: 10, createdMs: 11 };
-var PAYMENT_HEADERS = [
-  'Reference', 'Status', 'Created', 'Name', 'Email', 'Amount (USD)', 'What it is for', 'Paystack reference',
-  'Paid by', 'Receipt', 'Paid on', 'Created (ms)',
+  'Service id', 'Is package', 'Sessions', 'Each (KSh)', 'Client local time', 'Paystack reference', 'Calendar event', 'Charged (US cents)',
 ];
 var MINUTE_MS = 60000;
 var HOUR_MS = 3600000;
@@ -107,8 +104,6 @@ function doPost(e) {
     if (data.action === 'contact') return json_(contact_(data));
     if (data.action === 'payinit') return json_(payInit_(data));
     if (data.action === 'payverify') return json_(payVerify_(data));
-    if (data.action === 'usdinit') return json_(usdInit_(data));
-    if (data.action === 'usdverify') return json_(usdVerify_(data));
     return json_({ ok: false, code: 'bad_request', message: 'Unknown action.' });
   } catch (err) {
     return json_({ ok: false, code: 'error', message: String(err && err.message ? err.message : err) });
@@ -183,11 +178,6 @@ function getSpreadsheet_() {
     blocked.getRange(2, 1, 1, 3).setValues([['Type a start date and time here', 'Type an end date and time here', 'Delete this row. Add each day off or holiday on its own row.']]);
     blocked.setFrozenRows(1);
   }
-  if (!ss.getSheetByName('Payments')) {
-    var payments = ss.insertSheet('Payments');
-    payments.getRange(1, 1, 1, PAYMENT_HEADERS.length).setValues([PAYMENT_HEADERS]).setFontWeight('bold');
-    payments.setFrozenRows(1);
-  }
   spreadsheetCache_ = ss;
   return ss;
 }
@@ -224,6 +214,7 @@ function readBookings_() {
       localTime: String(r[COL.localTime] || ''),
       payRef: String(r[COL.payRef] || ''),
       eventId: String(r[COL.eventId] || ''),
+      usdCents: Number(r[COL.usdCents]) || 0,
     });
   }
   return out;
@@ -422,6 +413,7 @@ function rowFor_(b) {
   row[COL.each] = b.each || '';
   row[COL.localTime] = b.localTime || '';
   row[COL.payRef] = b.payRef || '';
+  row[COL.usdCents] = b.usdCents || '';
   return row;
 }
 
@@ -697,6 +689,15 @@ function row_(label, value) {
   );
 }
 
+// For Anne's email: what the client paid in US dollars, and how that compares with the usual price.
+function usdNote_(b) {
+  if (!b.usdCents) return '';
+  var usual = usualUsdCents_(b.total);
+  var note = ' (the client chose to pay ' + usdText_(b.usdCents / 100) + '; the usual price is ' + usdText_(usual / 100) + ')';
+  if (usual && b.usdCents < usual) note += '\nNOTE: this is LESS than the usual price. Please check you are happy with it.';
+  return note;
+}
+
 function sendCoachEmail_(b, needsNewTime) {
   var lines = [];
   if (needsNewTime) {
@@ -712,11 +713,11 @@ function sendCoachEmail_(b, needsNewTime) {
   );
   if (b.isPackage) {
     lines.push(
-      'Package: ' + b.sessions + ' sessions at KSh ' + b.each + ' each, total KSh ' + b.total,
+      'Package: ' + b.sessions + ' sessions at KSh ' + b.each + ' each, total KSh ' + b.total + usdNote_(b),
       'ACTION: arrange the other ' + (b.sessions - 1) + ' sessions with the client.',
     );
   } else if (!b.discovery) {
-    lines.push('Cost: KSh ' + b.total);
+    lines.push('Cost: KSh ' + b.total + usdNote_(b));
   }
   lines.push((b.isPackage ? 'First session: ' : 'When: ') + whenText_(b.slot.startMs));
   if (b.localTime) lines.push('Client local time: ' + b.localTime);
@@ -783,6 +784,7 @@ function infoFor_(row) {
     name: row.name,
     start: row.start,
     total: row.total,
+    usd: row.usdCents ? row.usdCents / 100 : 0,
   };
 }
 
@@ -804,6 +806,7 @@ function bookingFromRow_(row, paymentText, receipt) {
     paymentText: paymentText,
     receipt: receipt,
     localTime: row.localTime,
+    usdCents: row.usdCents,
   };
 }
 
@@ -826,6 +829,18 @@ function payInit_(data) {
   var sessions = isPackage ? CONFIG.PACKAGE_SESSIONS : 1;
   var each = offer.price - (isPackage ? CONFIG.PACKAGE_DISCOUNT_PER_SESSION : 0);
   var total = each * sessions;
+
+  // Paying in US dollars: the client chooses the amount, within the limits in CONFIG. It is checked
+  // here, and Paystack is later asked to confirm exactly this many cents arrived.
+  var usdCents = 0;
+  if (data.usd) {
+    if (!CONFIG.USD_ENABLED) return { ok: false, code: 'currency', message: USD_OFF_MESSAGE_ };
+    var dollars = Number(data.usdAmount);
+    if (!isFinite(dollars) || dollars < CONFIG.USD_MIN || dollars > CONFIG.USD_MAX) {
+      return { ok: false, code: 'amount', message: 'Please enter an amount between ' + usdText_(CONFIG.USD_MIN) + ' and ' + usdText_(CONFIG.USD_MAX) + '.' };
+    }
+    usdCents = Math.round(dollars * 100);
+  }
 
   var back = String(data.returnUrl || '').split('#')[0].split('?')[0];
   var returnUrl = back.length < 200 && /^\S+$/.test(back) && CONFIG.ALLOWED_RETURN.test(back) ? back : CONFIG.SITE_URL + '/';
@@ -853,9 +868,9 @@ function payInit_(data) {
         ref: ref, status: 'awaiting-payment', nowMs: nowMs, slot: slot, name: name, email: email,
         phone: cleanLine_(data.phone, 40), notes: clean_(data.notes, 700), service: offer.name,
         pkg: isPackage ? sessions + ' sessions at KSh ' + each : '', total: total,
-        payment: 'Waiting for payment on Paystack', holdUntil: nowMs + CONFIG.PAYMENT_HOLD_MINUTES * MINUTE_MS,
+        payment: usdCents ? 'Waiting for payment on Paystack in US dollars' : 'Waiting for payment on Paystack', holdUntil: nowMs + CONFIG.PAYMENT_HOLD_MINUTES * MINUTE_MS,
         offerId: offerId, isPackage: isPackage, sessions: sessions, each: each,
-        localTime: cleanLine_(data.localTime, 80), payRef: payRef,
+        localTime: cleanLine_(data.localTime, 80), payRef: payRef, usdCents: usdCents,
       }),
     );
     return { ok: true, payRef: payRef };
@@ -864,8 +879,8 @@ function payInit_(data) {
 
   var res = paystackCall_('post', '/transaction/initialize', {
     email: email,
-    amount: String(total * 100),
-    currency: 'KES',
+    amount: String(usdCents || total * 100),
+    currency: usdCents ? 'USD' : 'KES',
     reference: outcome.payRef,
     callback_url: returnUrl,
     metadata: JSON.stringify({ booking: ref, service: offer.name, client: name }),
@@ -874,9 +889,24 @@ function payInit_(data) {
   if (res.code !== 200 || !checkout) {
     var failed = readBookings_().filter(function (b) { return b.payRef === outcome.payRef; })[0];
     if (failed) updateRow_(failed.row, { status: 'init-failed', payment: 'Paystack did not start: ' + cleanLine_(res.body && res.body.message, 120) });
+    if (usdCents && /currenc/i.test(String(res.body && res.body.message))) {
+      return { ok: false, code: 'currency', message: USD_OFF_MESSAGE_ };
+    }
     return { ok: false, code: 'gateway', message: 'The payment page could not be opened. Please try again.' };
   }
   return { ok: true, url: checkout };
+}
+
+var USD_OFF_MESSAGE_ = 'Payments in US dollars are not switched on yet. Please pay by card or M-Pesa in shillings, or email ' + CONFIG.COACH_EMAIL + '.';
+
+// What the shilling price comes to in US cents at the rate in CONFIG (the "usual price").
+function usualUsdCents_(totalKes) {
+  var rate = Number(CONFIG.KES_PER_USD);
+  return rate > 0 ? Math.ceil((totalKes * 100) / rate) : 0;
+}
+
+function usdText_(amount) {
+  return 'US$' + Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function payVerify_(data) {
@@ -903,7 +933,9 @@ function settlePayment_(payRef) {
   if (status !== 'success') return { state: 'pending' };
 
   // The money arrived. Make sure it is the right amount in the right currency.
-  var rightAmount = Number(tx.amount) === row.total * 100 && (!tx.currency || String(tx.currency) === 'KES');
+  var rightAmount = row.usdCents
+    ? Number(tx.amount) === row.usdCents && String(tx.currency) === 'USD'
+    : Number(tx.amount) === row.total * 100 && (!tx.currency || String(tx.currency) === 'KES');
   if (!rightAmount) {
     updateRow_(row.row, { status: 'payment-problem', payment: 'Paystack amount or currency did not match. Check Paystack.' });
     safely_(function () {
@@ -911,15 +943,15 @@ function settlePayment_(payRef) {
         to: CONFIG.COACH_EMAIL,
         name: CONFIG.BUSINESS_NAME + ' website',
         subject: 'ACTION NEEDED: payment problem for booking ' + row.ref,
-        body: 'A Paystack payment (' + payRef + ') for ' + row.name + ' (' + row.email + ') did not match the expected amount of KSh ' +
-          row.total + '. Please check it in your Paystack dashboard.',
+        body: 'A Paystack payment (' + payRef + ') for ' + row.name + ' (' + row.email + ') did not match the expected amount of ' +
+          (row.usdCents ? usdText_(row.usdCents / 100) : 'KSh ' + row.total) + '. Please check it in your Paystack dashboard.',
       });
     });
     return { state: 'problem' };
   }
 
   var channel = tx.channel === 'mobile_money' ? 'M-Pesa' : tx.channel === 'card' ? 'card' : 'Paystack';
-  var paymentText = 'Paid online by ' + channel + ' (Paystack)';
+  var paymentText = 'Paid online by ' + channel + ' (Paystack' + (row.usdCents ? ', ' + usdText_(row.usdCents / 100) : '') + ')';
   var receipt = cleanLine_(tx.receipt_number || tx.id || payRef, 40);
 
   var outcome = withLock_(function () {
@@ -946,236 +978,10 @@ function settlePayment_(payRef) {
 }
 
 
-// ───────────────────────────── Pay in USD ─────────────────────────────
-
-function paymentsSheet_() {
-  return getSpreadsheet_().getSheetByName('Payments');
-}
-
-function readPayments_() {
-  var rows = paymentsSheet_().getDataRange().getValues();
-  var out = [];
-  for (var i = 1; i < rows.length; i += 1) {
-    var r = rows[i];
-    if (!r[PCOL.ref]) continue;
-    var amount = Number(r[PCOL.amount]) || 0;
-    out.push({
-      row: i + 1,
-      ref: String(r[PCOL.ref]),
-      status: String(r[PCOL.status]).toLowerCase(),
-      name: String(r[PCOL.name] || ''),
-      email: String(r[PCOL.email] || ''),
-      amount: amount,
-      cents: Math.round(amount * 100),
-      note: String(r[PCOL.note] || ''),
-      payRef: String(r[PCOL.payRef] || ''),
-      createdMs: Number(r[PCOL.createdMs]) || 0,
-    });
-  }
-  return out;
-}
-
-function updatePayment_(rowNumber, fields) {
-  var sheet = paymentsSheet_();
-  Object.keys(fields).forEach(function (key) {
-    sheet.getRange(rowNumber, PCOL[key] + 1).setValue(fields[key]);
-  });
-}
-
-function usdText_(amount) {
-  return 'US$' + Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function usdInfoFor_(p) {
-  return { ref: p.ref, name: p.name, email: p.email, amount: p.amount, note: p.note };
-}
-
-// Starts a US dollar payment for an amount the client chose. The amount is checked here against
-// the limits in CONFIG, never trusted from the website.
-function usdInit_(data) {
-  var nowMs = Date.now();
-  if (!CONFIG.USD_ENABLED) return { ok: false, code: 'unavailable', message: 'Payments in US dollars are not available right now.' };
-  var name = cleanLine_(data.name, 80);
-  var email = cleanLine_(data.email, 120).toLowerCase();
-  var note = cleanLine_(data.note, 200);
-  var amount = Math.round(Number(data.amount) * 100) / 100;
-  if (name.length < 2 || !validEmail_(email) || !isFinite(amount)) {
-    return { ok: false, code: 'bad_request', message: 'Please check your name, email and amount.' };
-  }
-  if (amount < CONFIG.USD_MIN || amount > CONFIG.USD_MAX) {
-    return { ok: false, code: 'amount', message: 'Please enter an amount between ' + usdText_(CONFIG.USD_MIN) + ' and ' + usdText_(CONFIG.USD_MAX) + '.' };
-  }
-  if (!paystackKey_()) return { ok: false, code: 'not_configured', message: 'Online payments are not switched on yet.' };
-
-  var cache = CacheService.getScriptCache();
-  var key = 'usd_' + email.slice(0, 80);
-  if (cache.get(key)) return { ok: false, code: 'busy', message: 'Please wait a few seconds and try again.' };
-  cache.put(key, '1', 10);
-
-  var back = String(data.returnUrl || '').split('#')[0].split('?')[0];
-  var returnUrl = back.length < 200 && /^\S+$/.test(back) && CONFIG.ALLOWED_RETURN.test(back) ? back : CONFIG.SITE_URL + '/';
-
-  var ref = 'RU-' + (nowMs.toString(36) + Math.random().toString(36).slice(2, 6)).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(-9);
-  var payRef = ref + '-1';
-  var cents = Math.round(amount * 100);
-
-  var made = withLock_(function () {
-    var waiting = readPayments_().filter(function (p) {
-      return p.status === 'awaiting-payment' && p.email.toLowerCase() === email && nowMs - p.createdMs < HOUR_MS;
-    });
-    if (waiting.length >= 5) return { ok: false, code: 'busy', message: 'Too many unfinished payments for this email. Please try again later.' };
-    paymentsSheet_().appendRow([
-      ref, 'awaiting-payment', Utilities.formatDate(new Date(nowMs), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
-      name, email, amount, note, payRef, '', '', '', nowMs,
-    ]);
-    return { ok: true, row: paymentsSheet_().getLastRow() };
-  });
-  if (!made.ok) return made;
-
-  var res = paystackCall_('post', '/transaction/initialize', {
-    email: email,
-    amount: String(cents),
-    currency: 'USD',
-    reference: payRef,
-    callback_url: returnUrl,
-    metadata: JSON.stringify({ payment: ref, client: name, note: note }),
-  });
-  var checkout = res.body && res.body.data && res.body.data.authorization_url;
-  if (res.code !== 200 || !checkout) {
-    var why = cleanLine_(res.body && res.body.message, 120);
-    updatePayment_(made.row, { status: 'init-failed', channel: 'Paystack did not start: ' + why });
-    // Paystack refuses USD until a USD account has been added and approved in the dashboard.
-    if (/currenc/i.test(why)) {
-      return { ok: false, code: 'currency', message: 'Payments in US dollars are not switched on yet. Please email ' + CONFIG.COACH_NAME.split(' ')[0] + ' and she will help.' };
-    }
-    return { ok: false, code: 'gateway', message: 'The payment page could not be opened. Please try again.' };
-  }
-  return { ok: true, url: checkout };
-}
-
-function usdVerify_(data) {
-  var result = settleUsd_(cleanLine_(data.payRef, 40));
-  return { ok: true, state: result.state, info: result.info || null, emailed: Boolean(result.emailed) };
-}
-
-// Checks one USD payment with Paystack and, if the money has arrived, records it and sends the emails.
-// States: paid, pending, failed, problem, not_found, error.
-function settleUsd_(payRef) {
-  if (!/^RU-[A-Za-z0-9]+-\d+$/.test(payRef)) return { state: 'not_found' };
-  var row = readPayments_().filter(function (p) { return p.payRef === payRef; })[0];
-  if (!row) return { state: 'not_found' };
-  if (row.status === 'paid') return { state: 'paid', info: usdInfoFor_(row) };
-  if (row.status === 'payment-problem' || row.status === 'init-failed') return { state: 'problem' };
-  if (!paystackKey_()) return { state: 'error' };
-
-  var res = paystackCall_('get', '/transaction/verify/' + encodeURIComponent(payRef));
-  var tx = res.body && res.body.data;
-  if (res.code !== 200 || !tx) return { state: 'pending' };
-  var status = String(tx.status);
-  if (status === 'failed' || status === 'reversed') return { state: 'failed' };
-  if (status !== 'success') return { state: 'pending' };
-
-  // The money arrived. It must be exactly the amount asked for, in US dollars.
-  if (Number(tx.amount) !== row.cents || String(tx.currency) !== 'USD') {
-    updatePayment_(row.row, { status: 'payment-problem', channel: 'Paystack amount or currency did not match. Check Paystack.' });
-    safely_(function () {
-      MailApp.sendEmail({
-        to: CONFIG.COACH_EMAIL,
-        name: CONFIG.BUSINESS_NAME + ' website',
-        subject: 'ACTION NEEDED: USD payment problem ' + row.ref,
-        body: 'A Paystack payment (' + payRef + ') from ' + row.name + ' (' + row.email + ') did not match the expected ' +
-          usdText_(row.amount) + '. Please check it in your Paystack dashboard.',
-      });
-    });
-    return { state: 'problem' };
-  }
-
-  var channel = tx.channel === 'mobile_money' ? 'M-Pesa' : tx.channel === 'card' ? 'Card' : 'Paystack';
-  var receipt = cleanLine_(tx.receipt_number || tx.id || payRef, 40);
-  var first = withLock_(function () {
-    var fresh = readPayments_().filter(function (p) { return p.payRef === payRef; })[0];
-    if (fresh.status === 'paid') return false;
-    updatePayment_(fresh.row, {
-      status: 'paid', channel: channel, receipt: receipt,
-      paidAt: Utilities.formatDate(new Date(Date.now()), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
-    });
-    return true;
-  });
-  if (!first) return { state: 'paid', info: usdInfoFor_(row) };
-
-  safely_(function () { sendUsdCoachEmail_(row, channel, receipt); });
-  var emailed = safely_(function () { sendUsdClientEmail_(row); });
-  return { state: 'paid', info: usdInfoFor_(row), emailed: emailed };
-}
-
-function sendUsdClientEmail_(p) {
-  var first = p.name.split(/\s+/)[0];
-  var text = [
-    'Hi ' + first + ',', '',
-    'Thank you. ' + CONFIG.BUSINESS_NAME + ' has received your payment of ' + usdText_(p.amount) + '.', '',
-    'Reference: ' + p.ref,
-    p.note ? 'For: ' + p.note : '',
-    '', 'If anything looks wrong, reply to this email and we will help.', '',
-    'Warmly,', CONFIG.COACH_NAME, CONFIG.BUSINESS_NAME, CONFIG.SITE_URL,
-  ].filter(function (line, i, all) { return line !== '' || all[i - 1] !== ''; }).join('\n');
-  var html =
-    '<div style="font-family:Arial,Helvetica,sans-serif;color:#2A2233;line-height:1.55;max-width:560px">' +
-    '<p>Hi ' + esc_(first) + ',</p>' +
-    '<p>Thank you. ' + esc_(CONFIG.BUSINESS_NAME) + ' has received your payment of <strong>' + esc_(usdText_(p.amount)) + '</strong>.</p>' +
-    '<table style="border-collapse:collapse;margin:16px 0;width:100%">' +
-    row_('Reference', p.ref) + (p.note ? row_('For', p.note) : '') + row_('Amount', usdText_(p.amount)) +
-    '</table>' +
-    '<p>If anything looks wrong, reply to this email and we will help.</p>' +
-    '<p>Warmly,<br>' + esc_(CONFIG.COACH_NAME) + '<br>' + esc_(CONFIG.BUSINESS_NAME) + '<br>' +
-    '<a href="' + esc_(CONFIG.SITE_URL) + '">' + esc_(CONFIG.SITE_URL) + '</a></p></div>';
-  MailApp.sendEmail({
-    to: p.email,
-    replyTo: CONFIG.COACH_EMAIL,
-    name: CONFIG.COACH_NAME + ' (' + CONFIG.BUSINESS_NAME + ')',
-    subject: 'Payment received: ' + usdText_(p.amount),
-    body: text,
-    htmlBody: html,
-  });
-}
-
-function sendUsdCoachEmail_(p, channel, receipt) {
-  MailApp.sendEmail({
-    to: CONFIG.COACH_EMAIL,
-    replyTo: p.email,
-    name: CONFIG.BUSINESS_NAME + ' website',
-    subject: 'USD payment received: ' + usdText_(p.amount) + ' from ' + p.name,
-    body: [
-      'A payment of ' + usdText_(p.amount) + ' was received through the website.', '',
-      'Reference: ' + p.ref,
-      'Name: ' + p.name,
-      'Email: ' + p.email,
-      'For: ' + (p.note || 'Not given'),
-      'Paid by: ' + channel + ' (Paystack)',
-      'Receipt: ' + receipt, '',
-      '(Reply to this email to write to them.)',
-    ].join('\n'),
-  });
-}
-
-// Part of the 5-minute check: confirms USD payments the client never came back for,
-// and closes ones that were never paid.
-function reconcileUsd_() {
-  var nowMs = Date.now();
-  readPayments_().forEach(function (p) {
-    if (p.status !== 'awaiting-payment' || !p.payRef) return;
-    if (nowMs - p.createdMs > 6 * HOUR_MS) {
-      updatePayment_(p.row, { status: 'unpaid' });
-      return;
-    }
-    settleUsd_(p.payRef);
-  });
-}
-
 // Runs every few minutes (see enableAutoChecks). Confirms clients who paid but closed the page.
 function reconcilePayments() {
   safely_(syncCalendar_);
   if (!paystackKey_()) return;
-  safely_(reconcileUsd_);
   var nowMs = Date.now();
   readBookings_().forEach(function (b) {
     var waiting = b.payRef && (b.status === 'awaiting-payment' || b.status === 'released');

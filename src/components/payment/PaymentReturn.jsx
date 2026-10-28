@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LoaderCircle, RotateCw } from 'lucide-react';
 import { SITE } from '../../config/site';
 import { formatKes, formatUsd } from '../../lib/format';
-import { isUsdRef, verifyPaystack, verifyUsd } from '../../services/paystack';
+import { verifyPaystack } from '../../services/paystack';
 import { AnimatedCheck } from '../booking/Confirmation';
 import Logo from '../art/Logo';
 import Button from '../ui/Button';
@@ -20,7 +20,6 @@ export default function PaymentReturn({ payRef }) {
   const [view, setView] = useState({ state: 'checking' });
   const run = useRef(0); // only the latest check may update the page (also stops double runs in dev)
   const heading = useRef(null);
-  const usd = isUsdRef(payRef);
 
   const check = useCallback(async () => {
     run.current += 1;
@@ -29,7 +28,7 @@ export default function PaymentReturn({ payRef }) {
     setView({ state: 'checking' });
     for (let attempt = 0; attempt < TRIES; attempt += 1) {
       try {
-        const result = await (usd ? verifyUsd(payRef) : verifyPaystack(payRef));
+        const result = await verifyPaystack(payRef);
         if (!alive.current) return;
         if (result.state !== 'pending') {
           setView(result);
@@ -46,7 +45,7 @@ export default function PaymentReturn({ payRef }) {
       if (!alive.current) return;
     }
     setView({ state: 'slow' });
-  }, [payRef, usd]);
+  }, [payRef]);
 
   useEffect(() => {
     const previous = document.title;
@@ -66,12 +65,6 @@ export default function PaymentReturn({ payRef }) {
   const first = info?.name?.trim().split(/\s+/)[0];
   const copy = {
     checking: ['Confirming your payment', 'This takes a few seconds. Please keep this page open.'],
-    paid: [
-      'Payment received. Thank you.',
-      view.emailed
-        ? `${first ? `${first}, a` : 'A'} receipt is on its way to ${info?.email}.`
-        : `${SITE.coachFirstName} has been told and will be in touch if anything more is needed.`,
-    ],
     confirmed: [
       'Payment received. Your booking is confirmed.',
       view.emailed
@@ -85,7 +78,7 @@ export default function PaymentReturn({ payRef }) {
     slow: ['Still waiting for your payment', 'Paystack has not confirmed it yet.'],
     failed: [
       'The payment did not go through',
-      usd ? 'You have not been charged.' : 'No booking was made and you have not been charged for it.',
+      'No booking was made and you have not been charged for it.',
     ],
     problem: ['We need to check your payment', 'We could not match it automatically.'],
     network: ['We could not check your payment', 'Your connection may have dropped.'],
@@ -109,7 +102,7 @@ export default function PaymentReturn({ payRef }) {
           <div className="flex items-center gap-4">
             {view.state === 'checking' ? (
               <LoaderCircle size={44} className="shrink-0 animate-spin text-moss-600" aria-hidden="true" />
-            ) : view.state === 'confirmed' || view.state === 'paid' ? (
+            ) : view.state === 'confirmed' ? (
               <AnimatedCheck />
             ) : null}
             <div>
@@ -123,30 +116,6 @@ export default function PaymentReturn({ payRef }) {
           </div>
 
           <div className="mt-8 space-y-5">
-            {view.state === 'paid' && info && (
-              <>
-                <dl className="divide-y divide-moss-200 rounded-2xl border border-moss-200 bg-surface">
-                  {[
-                    ['Reference', info.ref],
-                    ['Amount', formatUsd(info.amount)],
-                    info.note ? ['For', info.note] : null,
-                  ]
-                    .filter(Boolean)
-                    .map(([label, value]) => (
-                      <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-[8rem_1fr]">
-                        <dt className="text-sm text-fig-600">{label}</dt>
-                        <dd className="text-fig-900">{value}</dd>
-                      </div>
-                    ))}
-                </dl>
-                <div className="flex flex-wrap gap-3">
-                  <Button as="a" href={window.location.pathname}>
-                    Back to the website
-                  </Button>
-                </div>
-              </>
-            )}
-
             {view.state === 'confirmed' && info && (
               <>
                 {info.isPackage && (
@@ -160,7 +129,7 @@ export default function PaymentReturn({ payRef }) {
                     ['Reference', info.ref],
                     ['Service', `${info.service}, ${info.minutes} minutes${info.isPackage ? ' each' : ''}`],
                     [info.isPackage ? 'First session' : 'When', info.when],
-                    ['Paid', formatKes(info.total)],
+                    ['Paid', info.usd ? `${formatUsd(info.usd)} (${formatKes(info.total)})` : formatKes(info.total)],
                   ].map(([label, value]) => (
                     <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-[8rem_1fr]">
                       <dt className="text-sm text-fig-600">{label}</dt>
@@ -178,7 +147,7 @@ export default function PaymentReturn({ payRef }) {
 
             {view.state === 'needs-new-time' && info && (
               <Notice>
-                Your payment of {formatKes(info.total)} is safe and {SITE.coachFirstName} has been told. She will contact you
+                Your payment of {info.usd ? formatUsd(info.usd) : formatKes(info.total)} is safe and {SITE.coachFirstName} has been told. She will contact you
                 at {info.email} to choose another time that suits you. Reference {info.ref}.
               </Notice>
             )}
@@ -186,7 +155,7 @@ export default function PaymentReturn({ payRef }) {
             {view.state === 'slow' && (
               <>
                 <Notice>
-                  If you have paid, there is nothing more to do. {usd ? 'Your payment is recorded' : 'Your booking is confirmed'}{' '}
+                  If you have paid, there is nothing more to do. Your booking is confirmed{' '}
                   automatically as soon as Paystack tells us, and you will get an email. If you have not paid yet, you can
                   finish on Paystack.
                 </Notice>
@@ -203,8 +172,8 @@ export default function PaymentReturn({ payRef }) {
 
             {(view.state === 'failed' || view.state === 'not_found') && (
               <div className="flex flex-wrap gap-3">
-                <Button as="a" href={usd ? window.location.pathname : `${window.location.pathname}#book`}>
-                  {usd ? 'Back to the website' : 'Book again'}
+                <Button as="a" href={`${window.location.pathname}#book`}>
+                  Book again
                 </Button>
               </div>
             )}
@@ -222,7 +191,7 @@ export default function PaymentReturn({ payRef }) {
             {view.state === 'network' && (
               <>
                 <Notice tone="error">
-                  If you paid, {usd ? 'your payment is not lost: it will be recorded' : 'your booking is not lost: it will be confirmed'}{' '}
+                  If you paid, your booking is not lost: it will be confirmed{' '}
                   automatically and you will get an email.
                 </Notice>
                 <Button variant="secondary" onClick={check}>

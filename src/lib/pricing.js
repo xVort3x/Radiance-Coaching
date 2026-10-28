@@ -1,4 +1,4 @@
-import { PACKAGE } from '../config/site';
+import { PACKAGE, USD_RATE } from '../config/site';
 
 // What a booking costs. `bundle` means the 5-session package (paid services only).
 export function quoteFor(offer, bundle = false) {
@@ -13,3 +13,6 @@ export function quoteFor(offer, bundle = false) {
     saving: isPackage ? PACKAGE.discountPerSessionKes * count : 0,
   };
 }
+
+// The usual price in US cents for a total in shillings (the starting amount for dollar payments).
+export const usdCentsFor = (totalKes) => Math.ceil((totalKes * 100) / USD_RATE.kesPerUsd);

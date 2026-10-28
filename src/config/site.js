@@ -85,9 +85,12 @@ export const OFFERS = {
 
 // Booking five sessions together is discounted. The discount applies to each
 // session. Like all prices, it is only shown at checkout.
-// Limits for the "Pay in USD" popup, in US dollars. Keep these the same as USD_MIN and USD_MAX in
-// backend/Code.gs: the helper checks them again before any payment starts.
-export const USD_PAY = { min: 5, max: 5000 };
+// Paying in US dollars at checkout: the client chooses the amount, between these limits. Keep them the
+// same as USD_MIN and USD_MAX in backend/Code.gs (the helper checks them again). The amount starts at
+// the "usual price": the price in shillings divided by the rate below, rounded up to the next cent.
+// Keep the rate the same as KES_PER_USD in backend/Code.gs.
+export const USD_LIMITS = { min: 1, max: 5000 };
+export const USD_RATE = { kesPerUsd: 130 };
 
 export const PACKAGE = { sessions: 5, discountPerSessionKes: 250 };
 

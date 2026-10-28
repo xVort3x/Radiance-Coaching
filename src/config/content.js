@@ -79,7 +79,7 @@ export const FAQ = [
   },
   {
     q: 'How do I pay?',
-    a: 'The discovery call is free. For a coaching session, you choose your service and a time, and the price is shown at checkout before you pay. You can pay by M-Pesa, or by Visa or Mastercard.',
+    a: 'The discovery call is free. For a coaching session, you choose your service and a time, and the price is shown at checkout before you pay. You can pay by M-Pesa or by card, and clients abroad can pay in US dollars.',
   },
   {
     q: 'Can I book several sessions at once?',

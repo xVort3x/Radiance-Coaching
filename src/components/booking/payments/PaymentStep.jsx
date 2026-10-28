@@ -9,10 +9,11 @@ import CardPanel from './CardPanel';
 import MethodPicker from './MethodPicker';
 import MpesaPanel from './MpesaPanel';
 import PaystackPanel from './PaystackPanel';
+import UsdPanel from './UsdPanel';
 
 export default function PaymentStep({ offer, quote, instant, reference, details, onPaid, onPayLater, onTaken }) {
   const modes = useMemo(() => getPaymentModes({ isPackage: quote.isPackage }), [quote.isPackage]);
-  const available = ['mpesa', 'card'].filter((id) => modes[id] !== 'unavailable');
+  const available = ['mpesa', 'card', 'usd'].filter((id) => modes[id] !== 'unavailable');
   const [method, setMethod] = useState(available[0] ?? null);
 
   if (available.length === 0) {
@@ -67,6 +68,18 @@ export default function PaymentStep({ offer, quote, instant, reference, details,
               instant={instant}
               reference={reference}
               details={details}
+              onTaken={onTaken}
+            />
+          )}
+          {method === 'usd' && (
+            <UsdPanel
+              mode={modes.usd}
+              offer={offer}
+              quote={quote}
+              instant={instant}
+              reference={reference}
+              details={details}
+              onPaid={onPaid}
               onTaken={onTaken}
             />
           )}

@@ -45,7 +45,7 @@ export default function PaystackPanel({ method, offer, quote, instant, reference
             </>
           ) : (
             <>
-              You will pay <strong>{formatKes(quote.total)}</strong> with Visa or Mastercard on Paystack&rsquo;s
+              You will pay <strong>{formatKes(quote.total)}</strong> with your card on Paystack&rsquo;s
               secure page. Your card details are never entered on this website.
             </>
           )}{' '}

@@ -10,6 +10,10 @@ const FOCUSABLE =
  *  - locks page scroll and hides the rest of the page from assistive tech
  *  - returns focus to whatever opened it
  */
+// Dialogs currently open, last = the one on top. Only the top one reacts to the keyboard, and the
+// page is only un-hidden once the last one closes.
+const openDialogs = [];
+
 export function useDialog(ref, onClose) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -19,6 +23,7 @@ export function useDialog(ref, onClose) {
     if (!node) return undefined;
 
     const opener = document.activeElement;
+    openDialogs.push(node);
     const root = document.getElementById('root');
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -27,6 +32,7 @@ export function useDialog(ref, onClose) {
     (node.querySelector('[data-autofocus]') || node).focus();
 
     const onKeyDown = (event) => {
+      if (openDialogs[openDialogs.length - 1] !== node) return;
       if (event.key === 'Escape') {
         event.stopPropagation();
         closeRef.current?.();
@@ -56,8 +62,12 @@ export function useDialog(ref, onClose) {
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      if (root) root.inert = false;
+      const at = openDialogs.lastIndexOf(node);
+      if (at !== -1) openDialogs.splice(at, 1);
+      if (openDialogs.length === 0) {
+        document.body.style.overflow = previousOverflow;
+        if (root) root.inert = false;
+      }
       if (opener && typeof opener.focus === 'function') opener.focus();
     };
   }, [ref]);

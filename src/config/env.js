@@ -27,7 +27,7 @@ export const ENV = {
   cardViaApi: flag(env.VITE_CARD_CHECKOUT_VIA_API),
   // Card and M-Pesa through Paystack (needs the booking helper). See the README.
   paystack: flag(env.VITE_PAYSTACK),
-  // "Pay in USD" button (needs Paystack, the booking helper and a USD account on Paystack).
+  // "US dollars" choice at checkout (needs Paystack, the booking helper and a USD account on Paystack).
   payUsd: flag(env.VITE_PAY_USD),
   demoFlag: flag(env.VITE_DEMO_PAYMENTS),
   isDev: Boolean(env.DEV),

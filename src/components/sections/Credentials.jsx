@@ -3,7 +3,7 @@ import Container from '../ui/Container';
 
 export default function Credentials() {
   return (
-    <section aria-labelledby="credentials-title" className="bg-mist-200 py-20 sm:py-24">
+    <section id="credentials" aria-labelledby="credentials-title" className="bg-mist-200 py-20 sm:py-24">
       <Container>
         <h2 id="credentials-title" className="max-w-2xl text-3xl leading-[1.1] text-fig-900 sm:text-4xl">
           Trained and certified

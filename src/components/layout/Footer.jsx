@@ -1,6 +1,6 @@
 import { Mail } from 'lucide-react';
 import { WhatsAppLink } from '../ui/WhatsAppButton';
-import { NAV, SITE } from '../../config/site';
+import { NAV, SITE, legalHref } from '../../config/site';
 import Logo from '../art/Logo';
 import Container from '../ui/Container';
 
@@ -55,10 +55,10 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>
           <p className="flex gap-5">
-            <a href="#/privacy" className="hover:text-sun-300">
+            <a href={legalHref('privacy')} className="hover:text-sun-300">
               Privacy policy
             </a>
-            <a href="#/terms" className="hover:text-sun-300">
+            <a href={legalHref('terms')} className="hover:text-sun-300">
               Terms of service
             </a>
           </p>

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { LoaderCircle, Lock, ShieldCheck, X } from 'lucide-react';
-import { USD_PAY, SITE } from '../../config/site';
+import { USD_PAY, SITE, legalHref } from '../../config/site';
 import { isDemoMode } from '../../config/env';
 import { formatUsd } from '../../lib/format';
 import { isEmail } from '../../lib/validation';
@@ -237,11 +237,11 @@ function Dialog({ onClose }) {
 
               <p className="text-sm text-fig-600">
                 By continuing you agree to our{' '}
-                <a className="underline" href="#/terms" target="_blank" rel="noopener noreferrer">
+                <a className="underline" href={legalHref('terms')} target="_blank" rel="noopener noreferrer">
                   terms of service
                 </a>{' '}
                 and{' '}
-                <a className="underline" href="#/privacy" target="_blank" rel="noopener noreferrer">
+                <a className="underline" href={legalHref('privacy')} target="_blank" rel="noopener noreferrer">
                   privacy policy
                 </a>
                 . They open in a new tab.

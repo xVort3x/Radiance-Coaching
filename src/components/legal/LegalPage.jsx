@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { LEGAL_PAGES, LEGAL_UPDATED } from '../../config/legal';
-import { SITE } from '../../config/site';
+import { SITE, homeHref, legalHref } from '../../config/site';
 import Logo from '../art/Logo';
 import Container from '../ui/Container';
 import ThemeToggle from '../ui/ThemeToggle';
 
-// A simple page for the privacy policy and terms, reached from #/privacy and #/terms.
+// A simple page for the privacy policy and terms, reached from /privacy/ and /terms/.
 export default function LegalPage({ slug }) {
   const page = LEGAL_PAGES[slug];
   const heading = useRef(null);
@@ -27,12 +27,12 @@ export default function LegalPage({ slug }) {
     <>
       <header className="border-b border-moss-200 bg-mist-100">
         <Container className="flex items-center justify-between py-4">
-          <a href="#" aria-label={`${SITE.name}, back to the home page`}>
+          <a href={homeHref} aria-label={`${SITE.name}, back to the home page`}>
             <Logo />
           </a>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <a href="#" className="inline-flex items-center gap-2 text-[0.95rem] text-moss-800 hover:text-moss-600">
+            <a href={homeHref} className="inline-flex items-center gap-2 text-[0.95rem] text-moss-800 hover:text-moss-600">
               <ArrowLeft size={18} aria-hidden="true" /> Back to the website
             </a>
           </div>
@@ -77,7 +77,7 @@ export default function LegalPage({ slug }) {
           </div>
 
           <p className="mt-14 border-t border-moss-200 pt-6 text-fig-700">
-            You may also want to read our <a className="underline" href={`#/${other.slug}`}>{other.title.toLowerCase()}</a>.
+            You may also want to read our <a className="underline" href={legalHref(other.slug)}>{other.title.toLowerCase()}</a>.
           </p>
         </Container>
       </main>

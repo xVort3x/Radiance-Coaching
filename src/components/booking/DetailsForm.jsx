@@ -1,3 +1,5 @@
+import { legalHref } from '../../config/site';
+
 function Field({ id, label, hint, error, children }) {
   return (
     <div>
@@ -79,11 +81,11 @@ export default function DetailsForm({ values, errors, onChange, discovery }) {
 
       <p className="text-sm text-fig-600">
         By continuing you agree to our{' '}
-        <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline">
+        <a href={legalHref('terms')} target="_blank" rel="noopener noreferrer" className="underline">
           terms of service
         </a>{' '}
         and{' '}
-        <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+        <a href={legalHref('privacy')} target="_blank" rel="noopener noreferrer" className="underline">
           privacy policy
         </a>
         . They open in a new tab.

@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react';
+import { SERVICES } from '../../config/content';
 import { SITE } from '../../config/site';
 import Container from '../ui/Container';
 
@@ -56,6 +57,37 @@ export default function About() {
               Her coaching is whole-person and trauma-informed. She listens first, tells you the truth
               kindly, and trusts you to know what you need. Nothing is rushed, and you are never asked to
               be further along than you are.
+            </p>
+
+            <h3 className="pt-3 font-display text-2xl text-fig-900">What she offers</h3>
+            <ul className="space-y-3 text-[1.05rem]">
+              {SERVICES.map((service) => (
+                <li key={service.id}>
+                  <span className="font-medium text-fig-900">{service.title}.</span> {service.tagline}
+                </li>
+              ))}
+            </ul>
+            <p>
+              Not sure which fits? Begin with the free 30-minute discovery call, where you can share what is
+              going on and ask anything you like, with no pressure to continue.
+            </p>
+
+            <h3 className="pt-3 font-display text-2xl text-fig-900">How sessions work</h3>
+            <p>
+              Sessions are held online by video call, so you can join from somewhere private and comfortable.
+              You choose the focus of each session, and you can pause or change direction at any point.
+            </p>
+
+            <h3 className="pt-3 font-display text-2xl text-fig-900">Training</h3>
+            <p>
+              Anne is an ICF {SITE.credentialLong} (PCC) and a Certified End of Life Coach.{' '}
+              <a
+                href="#credentials"
+                className="text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700"
+              >
+                See her credentials
+              </a>
+              .
             </p>
           </div>
         </div>

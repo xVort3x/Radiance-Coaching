@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BookingProvider } from './booking/BookingContext';
 import BookingModal from './components/booking/BookingModal';
 import Footer from './components/layout/Footer';
@@ -19,9 +19,9 @@ import Process from './components/sections/Process';
 import Services from './components/sections/Services';
 import Testimonials from './components/sections/Testimonials';
 
-// #/privacy and #/terms show the policy pages. Every other address shows the site.
+// /privacy/ and /terms/ show the policy pages. Every other address shows the site.
 const legalRoute = () => {
-  const match = window.location.hash.match(/^#\/(privacy|terms)$/);
+  const match = window.location.pathname.match(/(?:^|\/)(privacy|terms)\/?$/);
   return match ? match[1] : null;
 };
 
@@ -36,18 +36,8 @@ const paymentReference = () => {
   }
 };
 
-function useLegalRoute() {
-  const [route, setRoute] = useState(legalRoute);
-  useEffect(() => {
-    const onChange = () => setRoute(legalRoute());
-    window.addEventListener('hashchange', onChange);
-    return () => window.removeEventListener('hashchange', onChange);
-  }, []);
-  return route;
-}
-
 export default function App() {
-  const legal = useLegalRoute();
+  const [legal] = useState(legalRoute);
   const [payRef] = useState(paymentReference);
   if (payRef) return <PaymentReturn payRef={payRef} />;
   if (legal) return <LegalPage slug={legal} />;

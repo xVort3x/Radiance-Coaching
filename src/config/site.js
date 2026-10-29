@@ -14,12 +14,18 @@ export const SITE = {
   portraitUrl: `${import.meta.env.BASE_URL}anne.jpg`,
 };
 
+// The privacy policy and terms have their own web addresses (/privacy/ and /terms/).
+// The home page is the site root, or the base path when the site is hosted in a subfolder.
+const ROOT = import.meta.env.BASE_URL.startsWith('/') ? import.meta.env.BASE_URL : '/';
+export const homeHref = ROOT;
+export const legalHref = (slug) => `${ROOT}${slug}/`;
+
 export const CREDENTIALS = [
   {
     id: 'pcc',
-    title: 'Certified Life Coach',
-    caption: 'ICF Professional Certified Coach (PCC)',
-    text: 'Anne holds a recognised Life Coach certification, demonstrating she has met rigorous standards in training, supervised practice, and professional ethics.',
+    title: 'ICF Professional Certified Coach (PCC)',
+    caption: 'International Coaching Federation',
+    text: 'Anne holds the Professional Certified Coach credential from the International Coaching Federation, which recognises coaches who have met its standards for training, coaching experience and professional ethics.',
     image: `${import.meta.env.BASE_URL}badges/icf-pcc.png`,
     alt: 'ICF Professional Certified Coach (PCC) credential badge',
     imageClass: 'h-36 w-36 object-contain',

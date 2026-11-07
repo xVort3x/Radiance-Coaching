@@ -18,10 +18,10 @@ var CONFIG = {
   // Anne's inbox. Notifications go here and clients can reply to her.
   COACH_EMAIL: 'info.radiancecoaching@gmail.com',
   // The video link clients receive. Paste a Google Meet or Zoom link between the quotes.
-  MEETING_LINK: 'PASTE YOUR GOOGLE MEET OR ZOOM LINK HERE',
+  MEETING_LINK: 'https://meet.google.com/gaq-ikzi-yey',
   SITE_URL: 'https://radiancecoaching.co.ke',
   // Optional: Anne's WhatsApp number as digits with country code, e.g. 254712345678. Blank = not shown.
-  WHATSAPP: '',
+  WHATSAPP: '254701208293',
   TIMEZONE: 'Africa/Nairobi',
   HOLD_MINUTES: 15,
   RESCHEDULE_NOTICE_HOURS: 24,

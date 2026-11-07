@@ -84,16 +84,8 @@ export default function About() {
 
             <h3 className="pt-3 font-display text-2xl text-fig-900">Credentials</h3>
             <p>
-              Anne holds the distinguished Professional Certified Coach (PCC) credential from the{' '}
-              <a
-                href="https://coachingfederation.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700"
-              >
-                International Coaching Federation (ICF)
-              </a>{' '}
-              and is a certified End of Life Coach, APSATS Trained Partner Coach.{' '}
+              Anne holds the distinguished Professional Certified Coach (PCC) credential from the
+              International Coaching Federation (ICF) and is a certified End of Life Coach, APSATS Trained Partner Coach.{' '}
               <a
                 href="#credentials"
                 className="text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700"

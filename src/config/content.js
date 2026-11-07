@@ -1,33 +1,56 @@
-import { SESSION_FORMAT, SITE } from './site';
+import { SITE } from './site';
 
 export const HERO = {
   lines: ['Healing,', 'wholeness', 'and hope.'],
   message:
-    'Life can be beautiful and deeply painful, sometimes in the same week. Radiance Coaching is a calm, steady place to feel what you feel, find your footing, and move toward a life that feels whole again.',
+    'Life can bring profound beauty and deep pain all at once. Radiance Coaching provides a calm, steady space to honor your feelings, regain your footing, and intentionally rebuild a life that feels whole.',
 };
 
 // The three services. `offerId` links each one to its booking option in site.js.
+// `title` is the booking name (tiles, checkout). `heading` is the name shown on the Services section.
 export const SERVICES = [
   {
     id: 'life',
     offerId: 'life',
     title: 'Life Coaching',
+    heading: 'Life Coaching',
     tagline: 'Change, direction and clarity.',
-    text: 'For seasons of change, when roles, relationships or beliefs are shifting and you want to know who you are now. Get clear on what matters, make decisions you trust, and build a life that feels like yours.',
+    text: 'For seasons of transition, when roles, relationships, or beliefs shift, and you rediscover who you are. We will work together to gain clarity on what truly matters, build decision-making you can trust, and intentionally cultivate a life that feels authentically yours.',
   },
   {
     id: 'grief',
     offerId: 'grief',
     title: 'Grief and End-of-Life Coaching',
+    heading: 'Grief & End-of-Life Support',
     tagline: 'Loss, and life\'s most tender transitions.',
-    text: 'Room to grieve in your own way and in your own time, and support if you are facing your own mortality or walking beside someone you love, including the conversations, decisions and meaning that come with it.',
+    text: 'A gentle, non-judgmental space to grieve in your own way and at your own pace. Whether you are facing a profound loss, your own mortality, or walking beside someone you love, we’ll move through the difficult conversations, practical choices, and deeper questions with care.',
   },
   {
     id: 'betrayal',
     offerId: 'betrayal',
     title: 'Betrayal Trauma Coaching',
+    heading: 'Betrayal Trauma Support',
     tagline: 'Steadiness after broken trust.',
-    text: 'When trust is broken the ground moves. Find steadiness and clarity, and learn to trust your own judgement again, at a pace that keeps you safe.',
+    text: 'A trauma-sensitive space focused on your immediate safety, stabilization, and nervous system regulation after shattered trust. Together, we gently process the somatic shock, grieve your profound losses, and build a structured path toward healing—whether you choose to navigate this recovery individually or as a couple.',
+  },
+];
+
+// The short list of paths in the "Meet your coach" section.
+export const ABOUT_PATHS = [
+  {
+    id: 'life',
+    title: 'Life Coaching',
+    text: 'Navigation, clarity, and intentional alignment for seasons of personal change.',
+  },
+  {
+    id: 'grief',
+    title: 'Grief & End-of-Life Support',
+    text: 'A compassionate anchor for loss and life’s most tender transitions.',
+  },
+  {
+    id: 'betrayal',
+    title: 'Betrayal Trauma Coaching',
+    text: 'Emotional safety, stabilization, and structured recovery after broken trust.',
   },
 ];
 
@@ -51,47 +74,47 @@ export const PRINCIPLES = [
 
 export const STEPS = [
   {
-    title: 'Book a free discovery call',
-    text: 'Not sure what you need? Choose a time that suits you. We talk about what you are carrying and what kind of support would help, with no pressure to continue.',
+    title: 'Book Your Complimentary Call',
+    text: 'Unsure which path fits your current needs? Simply select a time that suits your schedule. This free, 30-minute video call is a private space to discuss what you are navigating, ask questions, and explore the best supportive framework for you—with zero obligation.',
   },
   {
-    title: 'Choose your service',
-    text: 'Life Coaching, Grief and End-of-Life Coaching, or Betrayal Trauma Coaching. Pick a time, and you will see the price at checkout before you pay with M-Pesa or card.',
+    title: 'Select Your Path',
+    text: 'Choose between Life Coaching, Grief and End-of-Life Support, or Betrayal Trauma Coaching. Once you select a time, your professional investment will be clearly displayed at checkout before you complete your booking securely via M-Pesa or card.',
   },
   {
-    title: 'Begin at your pace',
-    text: 'Each session is shaped around you. You decide the focus, and we move at the speed that feels safe.',
+    title: 'Begin at Your Own Pace',
+    text: 'Every session is entirely self-directed and shaped around you. You direct the focus and depth of our conversations, ensuring we move exclusively at the speed that feels safe for your nervous system and your life.',
   },
 ];
 
 export const FAQ = [
   {
-    q: 'What is the free discovery call?',
-    a: 'It is for when you are not sure what you need. You share what is going on, ask anything you like, and Anne helps you work out which service fits, or whether coaching is right for you at the moment. It is free, lasts 30 minutes, and there is no pressure to continue.',
+    q: 'What is a free discovery call?',
+    a: 'Designed for when you are unsure of your next step. This complimentary, 30-minute session is a safe space to share your current situation and ask questions. Together, we will clarify which path aligns with your needs, or determine if coaching is the right fit for you at this time—with absolutely no pressure to continue.',
   },
   {
     q: 'Which service should I choose?',
-    a: 'If you can name it, choose it: Life Coaching for change and direction, Grief and End-of-Life Coaching for loss and mortality, Betrayal Trauma Coaching for broken trust. If you cannot, book the free discovery call and we will work it out together.',
+    a: 'Choose the specialized modality that mirrors your current situation below. If your circumstances feel too complex to categorize right now, you are warmly invited to book a complimentary 30-minute consultation so we can map out a supportive starting point together.',
   },
   {
     q: 'Where do sessions take place?',
-    a: `${SESSION_FORMAT}, so you can join from somewhere private and comfortable. Times on this site are shown in East Africa Time and your own local time is shown beside them when it differs.`,
+    a: 'Our private online video sessions allow you to join from somewhere private and comfortable. All calendar slots are displayed in East Africa Time (EAT), with your local time automatically reflected alongside them to ensure absolute scheduling clarity.',
   },
   {
     q: 'How do I pay?',
-    a: 'The discovery call is free. For a coaching session, you choose your service and a time, and the price is shown at checkout before you pay. You can pay by M-Pesa or by card, and clients abroad can pay in US dollars.',
+    a: 'Begin with a free discovery call. For standard sessions, choose your coaching modality and calendar slot to view transparent pricing at checkout. Book securely using M-Pesa or card, with convenient US dollar payment options available for our international clients.',
   },
   {
     q: 'Can I book several sessions at once?',
-    a: 'Yes. Choose a service, then choose the 5-session package for a discounted rate on every session. You pick the time of your first session when you book, and Anne arranges the other four with you. The package amount is shown at checkout before you pay.',
+    a: 'Investing in your progress with a 5-session package? Select your preferred coaching service below, then choose the multi-session package to apply a preferred rate to every session. You will select the date and time for your initial session now, and we will arrange the remaining four sessions together during our first meeting. Your package investment will be fully displayed at checkout prior to secure payment.',
   },
   {
-    q: 'Is what I share kept confidential?',
-    a: 'Yes. What you share is kept private. The usual exceptions apply where there is a risk of serious harm to you or someone else, or where the law requires disclosure.',
+    q: 'Confidentiality Standards',
+    a: 'We maintain absolute privacy across all coaching containers. In alignment with professional coaching ethics, information is never shared unless standard safety exceptions arise involving a serious risk of harm, or if legal disclosure becomes necessary.',
   },
   {
-    q: 'What if I need to change my time?',
-    a: `Email ${SITE.coachFirstName} as early as you can at ${SITE.email} and she will help you find another time.`,
+    q: 'What if I need to reschedule?',
+    a: `Alternative scheduling is available. If our open slots do not align with your availability, please email ${SITE.email} within 24 hrs so we can coordinate a time that works for you.`,
   },
 ];
 

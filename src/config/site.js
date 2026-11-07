@@ -5,10 +5,10 @@ export const SITE = {
   name: 'Radiance Coaching',
   coach: 'Anne Kibet',
   coachFirstName: 'Anne',
-  credential: 'PCC Certified Coach',
+  credential: 'ICF & PCC Certified Coach',
   credentialLong: 'Professional Certified Coach',
   email: 'info.radiancecoaching@gmail.com',
-  tagline: 'Healing, wholeness and hope.',
+  tagline: 'Hope, Progress, and Wholeness.',
   // Anne's photo lives in /public/anne.jpg. Replace the file to change it, or set
   // this to null to show an illustration instead.
   portraitUrl: `${import.meta.env.BASE_URL}anne.jpg`,
@@ -112,7 +112,7 @@ export const AVAILABILITY = {
     3: { open: '10:00', close: '19:00' },
     4: { open: '10:00', close: '19:00' },
     5: { open: '10:00', close: '19:00' },
-    6: { open: '11:30', close: '18:00' },
+    6: null,
   },
   minNoticeHours: 24,
   maxAdvanceDays: 60,

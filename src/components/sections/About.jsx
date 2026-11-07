@@ -1,5 +1,5 @@
 import { ShieldCheck } from 'lucide-react';
-import { SERVICES } from '../../config/content';
+import { ABOUT_PATHS } from '../../config/content';
 import { SITE } from '../../config/site';
 import Container from '../ui/Container';
 
@@ -46,41 +46,54 @@ export default function About() {
         <Portrait />
 
         <div>
-          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">Meet {SITE.coach}</h2>
+          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">Meet your coach</h2>
           <div className="mt-7 max-w-xl space-y-5 text-lg text-fig-700">
             <p>
-              {SITE.coach} is the founder of {SITE.name} and a {SITE.credential}. She works with people at
-              the hardest and most tender edges of life: loss, broken trust, the end of life, and the big
-              changes that leave you unsure who you are.
+              {SITE.coachFirstName} is the founder of {SITE.name} and an ICF {SITE.credentialLong}
+              (PCC). She walks alongside individuals navigating life’s most profound and sensitive
+              transitions: loss, shattered trust, end-of-life journeys, and the pivotal identity shifts that
+              follow unexpected change.
             </p>
             <p>
-              Her coaching is whole-person and trauma-informed. She listens first, tells you the truth
-              kindly, and trusts you to know what you need. Nothing is rushed, and you are never asked to
-              be further along than you are.
+              Her framework is deeply integrative and trauma-informed. She prioritizes compassionate
+              listening, delivers supportive and honest guidance, and respects your inherent capacity to
+              direct your own path. In her practice, nothing is rushed, and you are always met exactly where
+              you are today.
             </p>
 
-            <h3 className="pt-3 font-display text-2xl text-fig-900">What she offers</h3>
+            <h3 className="pt-3 font-display text-2xl text-fig-900">Tailored Paths of Support</h3>
             <ul className="space-y-3 text-[1.05rem]">
-              {SERVICES.map((service) => (
-                <li key={service.id}>
-                  <span className="font-medium text-fig-900">{service.title}.</span> {service.tagline}
+              {ABOUT_PATHS.map((path) => (
+                <li key={path.id}>
+                  <span className="font-medium text-fig-900">{path.title}:</span> {path.text}
                 </li>
               ))}
             </ul>
             <p>
-              Not sure which fits? Begin with the free 30-minute discovery call, where you can share what is
-              going on and ask anything you like, with no pressure to continue.
+              Unsure which path fits your current needs? Begin with a complimentary, 30-minute discovery call
+              to share your story, ask questions, and explore options with zero obligation.
             </p>
 
-            <h3 className="pt-3 font-display text-2xl text-fig-900">How sessions work</h3>
+            <h3 className="pt-3 font-display text-2xl text-fig-900">Your Session Structure</h3>
             <p>
-              Sessions are held online by video call, so you can join from somewhere private and comfortable.
-              You choose the focus of each session, and you can pause or change direction at any point.
+              All sessions are conducted via secure online video calls, allowing you to join from the privacy
+              and comfort of your own space. You retain absolute ownership of every session, with full
+              autonomy to guide the focus, pause, or adjust directions whenever your nervous system needs to
+              reset.
             </p>
 
-            <h3 className="pt-3 font-display text-2xl text-fig-900">Training</h3>
+            <h3 className="pt-3 font-display text-2xl text-fig-900">Credentials</h3>
             <p>
-              Anne is an ICF {SITE.credentialLong} (PCC) and a Certified End of Life Coach.{' '}
+              Anne holds the distinguished Professional Certified Coach (PCC) credential from the{' '}
+              <a
+                href="https://coachingfederation.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700"
+              >
+                International Coaching Federation (ICF)
+              </a>{' '}
+              and is a certified End of Life Coach, APSATS Trained Partner Coach.{' '}
               <a
                 href="#credentials"
                 className="text-moss-800 underline decoration-moss-300 decoration-2 underline-offset-4 hover:decoration-moss-700"

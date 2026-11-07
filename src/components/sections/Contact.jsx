@@ -46,10 +46,11 @@ export default function Contact() {
     <section id="contact" className="py-24 sm:py-32">
       <Container className="grid gap-14 lg:grid-cols-[5fr_7fr] lg:gap-24">
         <div>
-          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">Not ready to book? Say hello.</h2>
+          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">Not ready to book just yet? Reach out and say hello.</h2>
           <p className="mt-6 max-w-md text-lg text-fig-700">
-            Ask a question, share a little about what is happening, or just tell us you are thinking about
-            it. There is no pressure to book.
+            You are warmly invited to ask a question, share a brief note about what you are navigating, or
+            simply let me know you are considering your options. There is absolutely no pressure to book—your
+            timeline is entirely respected.
           </p>
           <a
             href={`mailto:${SITE.email}`}

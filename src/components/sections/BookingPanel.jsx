@@ -42,11 +42,11 @@ export default function BookingPanel() {
                 Book your session
               </h2>
               <p className="mt-3 max-w-xl text-fig-700">
-                Choose what you would like to book, then pick a time that suits you.
+                Select the session that meets your needs, then choose a time that works best for your schedule.
               </p>
             </div>
             <p className="text-[0.95rem] text-fig-600 lg:max-w-xs lg:text-right">
-              Monday to Friday, 10 am to 7 pm. Saturday, 11:30 am to 6 pm. East Africa Time.
+              Monday to Friday, 10 am to 7 pm. East Africa Time.
             </p>
           </div>
 

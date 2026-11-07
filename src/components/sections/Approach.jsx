@@ -13,11 +13,12 @@ export default function Approach() {
       <Container className="relative">
         <div className="max-w-3xl">
           <h2 className="text-4xl leading-[1.08] sm:text-5xl lg:text-[3.4rem]">
-            Whole-person and trauma-informed, at your pace
+            A Whole-Person, Trauma-Informed Framework
           </h2>
           <p className="mt-6 max-w-2xl text-lg text-fig-200">
-            Pain does not arrive neatly, and healing does not follow a schedule. Our work together is steady,
-            honest and kind, and it always starts with your sense of safety.
+            Disruption does not arrive neatly, and progress does not follow a strict timeline. Our work
+            together is steady, transparent, and respectful—firmly anchored in your immediate emotional and
+            physical safety.
           </p>
         </div>
 

@@ -10,9 +10,12 @@ export default function Process() {
     <section id="how-it-works" className="bg-mist-200 py-24 sm:py-32">
       <Container className="grid gap-14 lg:grid-cols-[5fr_7fr] lg:gap-24">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">How coaching works</h2>
-          <p className="mt-6 max-w-md text-lg text-fig-700">
-            Three simple steps, and the first one is free. You can stop or pause whenever you need to.
+          <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">How Coaching Works</h2>
+          <h3 className="mt-6 text-2xl text-fig-900 sm:text-[1.7rem]">A Simple, Self-Directed Process</h3>
+          <p className="mt-3 max-w-md text-lg text-fig-700">
+            Your path forward unfolds in three clear steps, beginning with a complimentary consultation. You
+            maintain absolute ownership of your journey and can pause, pivot, or stop your sessions whenever
+            you need to.
           </p>
           <Button className="mt-8" onClick={() => openBooking('discovery')}>
             Book a free discovery call

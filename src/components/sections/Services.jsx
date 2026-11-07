@@ -1,6 +1,6 @@
 import { Anchor, CalendarCheck, Compass, Flower2 } from 'lucide-react';
 import { SERVICES } from '../../config/content';
-import { OFFERS, PACKAGE, SESSION_FORMAT } from '../../config/site';
+import { OFFERS, PACKAGE } from '../../config/site';
 import { useBooking } from '../../booking/BookingContext';
 import { RingsArt } from '../art/SunriseArt';
 import Button from '../ui/Button';
@@ -17,10 +17,11 @@ export default function Services() {
       <Container>
         <div className="grid gap-14 lg:grid-cols-[5fr_7fr] lg:gap-24">
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">How Anne can support you</h2>
+            <h2 className="text-4xl leading-[1.08] text-fig-900 sm:text-5xl">Tailored Support for Your Journey</h2>
             <p className="mt-6 max-w-md text-lg text-fig-700">
-              Three kinds of coaching, each one-to-one and {SESSION_FORMAT.toLowerCase()}. Choose the one
-              that fits, or start with a free discovery call if you are not sure.
+              I offer three distinct paths of private, online video coaching designed to meet you exactly
+              where you are. Explore the options below to find the right fit, or start with a complimentary
+              discovery call to discuss the best path forward.
             </p>
           </div>
 
@@ -34,7 +35,7 @@ export default function Services() {
                       <Icon size={22} strokeWidth={1.6} aria-hidden="true" />
                     </span>
                     <div>
-                      <h3 className="text-2xl text-fig-900 sm:text-[1.7rem]">{service.title}</h3>
+                      <h3 className="text-2xl text-fig-900 sm:text-[1.7rem]">{service.heading}</h3>
                       <p className="mt-2 max-w-xl text-fig-700">{service.text}</p>
                       <div className="mt-5 flex flex-wrap gap-3">
                         <Button
@@ -68,12 +69,12 @@ export default function Services() {
             stroke="#F1CB7E"
           />
           <h3 className="max-w-xl text-3xl leading-tight sm:text-4xl">
-            Not sure what you need? Start with a free discovery call.
+            Not sure which path fits? Start with a complimentary discovery call.
           </h3>
           <p className="mt-5 max-w-xl text-lg text-moss-100">
-            It is {discovery.minutes} minutes, it is free, and there is nothing to prepare. Tell Anne what is
-            going on, ask anything, and together you will work out what kind of support fits, or whether
-            coaching is right for you at all.
+            This confidential, {discovery.minutes}-minute session requires no prior preparation. It is simply
+            a safe space to share what you are experiencing, ask questions, and collaboratively determine
+            the best supportive path for you—even if that means exploring resources outside of coaching.
           </p>
           <Button className="mt-8" size="lg" variant="sun" onClick={() => openBooking('discovery')}>
             <CalendarCheck size={20} aria-hidden="true" />

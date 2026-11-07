@@ -14,7 +14,7 @@ export default function Footer() {
             {SITE.tagline}
           </p>
           <p className="mt-4 max-w-sm text-[0.95rem] text-fig-300">
-            Compassionate, whole-person coaching with {SITE.coach}, {SITE.credential}.
+            Compassionate, whole-person coaching with {SITE.coach}, ICF {SITE.credentialLong} (PCC).
           </p>
         </div>
 
